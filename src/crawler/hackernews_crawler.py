@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from bs4 import BeautifulSoup
 from typing import List, Optional, Tuple
 from requests.models import Response
@@ -7,12 +8,12 @@ from crawler.http_tools import get_with_retries
 from utils import fail_gracefully
 
 
+LOGGER = logging.getLogger(__name__)
 BASE_URL: str = "https://news.ycombinator.com"
 SITE_LINK: str = urljoin(BASE_URL, "newest")
-LIST_ELEMENT_CLASS: str = "titleline"
 
 
-def articles(since: datetime) -> List[str]:
+def articles(since: datetime, until: datetime = datetime.now()) -> List[str]:
     articles: List[str] = []
     page_link: Optional[str] = SITE_LINK
 
@@ -21,7 +22,10 @@ def articles(since: datetime) -> List[str]:
         soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
         urls: List[str]
         shouldTerminate: bool
-        urls, shouldTerminate = _article_urls(soup=soup, since=since)
+        
+        urls, shouldTerminate = _retrieve_urls(
+            soup=soup, since=since, until=until
+        )
 
         articles.extend(_articles_texts(urls))
 
@@ -33,21 +37,24 @@ def articles(since: datetime) -> List[str]:
     return articles
 
 
-def _article_urls(
-    soup: BeautifulSoup, since: datetime
+def _retrieve_urls(
+    soup: BeautifulSoup, since: datetime, until: datetime
 ) -> Tuple[List[str], bool]:
     urls: List[str] = []
     shouldTerminate: bool = False
 
     for row in soup.find_all("tr", class_="athing"):
         title_span: Optional[BeautifulSoup] = row.find(
-            "span", class_=LIST_ELEMENT_CLASS
+            "span", class_="titleline"
         )
-        if title_span:
+        
+        if (title_span):
             link: str = _single_article_url(title_span)
             publication_date: datetime = _single_article_publication_date(row)
 
-            if publication_date > since:
+            if publication_date > until:
+                continue
+            elif publication_date >= since and publication_date <= until:
                 urls.append(link)
             else:
                 shouldTerminate = True
@@ -77,6 +84,7 @@ def _articles_texts(urls: List[str]) -> List[str]:
 
 
 def _send_request(url: str) -> Optional[Response]:
+    LOGGER.info(f"Retrieving article from {url}")
     response: Response = fail_gracefully(lambda: get_with_retries(url))
     return response
 
