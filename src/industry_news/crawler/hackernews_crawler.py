@@ -49,13 +49,16 @@ def _retrieve_urls(
     shouldTerminate: bool = False
 
     for row in soup.find_all("tr", class_="athing"):
-        title_span: Optional[BeautifulSoup] = row.find(
-            "span", class_="titleline"
+        verified_row: Tag = _verify_element(row, Tag)
+        title_span: Tag = _verify_element(
+            verified_row.find("span", class_="titleline"), Tag
         )
 
         if title_span:
             link: str = _single_article_url(title_span)
-            publication_date: datetime = _single_article_publication_date(row)
+            publication_date: datetime = _single_article_publication_date(
+                verified_row
+            )
 
             if publication_date > until:
                 continue
@@ -68,13 +71,13 @@ def _retrieve_urls(
     return urls, shouldTerminate
 
 
-def _single_article_url(title_span: BeautifulSoup) -> str:
+def _single_article_url(title_span: Tag) -> str:
     link_tag: Tag = _verify_element(title_span.find("a"), Tag)
     link: str = _verify_element(link_tag["href"], str)
     return link if link.startswith("http") else urljoin(BASE_URL, link)
 
 
-def _single_article_publication_date(row: BeautifulSoup) -> datetime:
+def _single_article_publication_date(row: Tag) -> datetime:
     next_row: Tag = _verify_element(row.find_next_sibling("tr"), Tag)
     date_span: Tag = _verify_element(next_row.find("span", class_="age"), Tag)
     publication_date: str = _verify_element(date_span["title"], str)
