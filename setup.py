@@ -5,5 +5,5 @@ setup(
     version="0.1",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
-    package_data={"src": ["py.typed"]},
+    package_data={"industry_news": ["py.typed"]},
 )

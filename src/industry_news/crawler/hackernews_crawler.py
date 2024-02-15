@@ -1,16 +1,21 @@
 from datetime import datetime
 import logging
 from bs4 import BeautifulSoup
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Type, TypeVar
 from requests.models import Response
 from urllib.parse import urljoin
-from crawler.http_tools import get_with_retries
-from utils import fail_gracefully
+from .http_tools import get_with_retries
+from industry_news.utils import fail_gracefully
+from bs4.element import Tag, NavigableString
 
+PageElement = Tag | NavigableString
 
 LOGGER = logging.getLogger(__name__)
 BASE_URL: str = "https://news.ycombinator.com"
 SITE_LINK: str = urljoin(BASE_URL, "newest")
+
+T = TypeVar("T")
+R = TypeVar("R")
 
 
 def articles(since: datetime, until: datetime = datetime.now()) -> List[str]:
@@ -22,7 +27,7 @@ def articles(since: datetime, until: datetime = datetime.now()) -> List[str]:
         soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
         urls: List[str]
         shouldTerminate: bool
-        
+
         urls, shouldTerminate = _retrieve_urls(
             soup=soup, since=since, until=until
         )
@@ -47,8 +52,8 @@ def _retrieve_urls(
         title_span: Optional[BeautifulSoup] = row.find(
             "span", class_="titleline"
         )
-        
-        if (title_span):
+
+        if title_span:
             link: str = _single_article_url(title_span)
             publication_date: datetime = _single_article_publication_date(row)
 
@@ -64,36 +69,52 @@ def _retrieve_urls(
 
 
 def _single_article_url(title_span: BeautifulSoup) -> str:
-    link: str = title_span.find("a")["href"]
+    link_tag: Tag = _verify_element(title_span.find("a"), Tag)
+    link: str = _verify_element(link_tag["href"], str)
     return link if link.startswith("http") else urljoin(BASE_URL, link)
 
 
 def _single_article_publication_date(row: BeautifulSoup) -> datetime:
-    next_row: Optional[BeautifulSoup] = row.find_next_sibling("tr")
-    publication_date: str = next_row.find("span", class_="age")["title"]
+    next_row: Tag = _verify_element(row.find_next_sibling("tr"), Tag)
+    date_span: Tag = _verify_element(next_row.find("span", class_="age"), Tag)
+    publication_date: str = _verify_element(date_span["title"], str)
     return datetime.strptime(publication_date, "%Y-%m-%dT%H:%M:%S")
 
 
 def _articles_texts(urls: List[str]) -> List[str]:
-    article_texts: List[str] = []
-    for url in urls:
-        response: Optional[Response] = _send_request(url)
-        if response is not None:
-            article_texts.append(_retrieve_text(response))
-    return article_texts
+    responses: List[Response] = [
+        response
+        for url in urls
+        if (response := _send_request(url)) is not None
+    ]
+    texts: List[str] = [
+        text
+        for response in responses
+        if (text := _retrieve_text(response)) is not None
+    ]
+    return texts
 
 
 def _send_request(url: str) -> Optional[Response]:
     LOGGER.info(f"Retrieving article from {url}")
-    response: Response = fail_gracefully(lambda: get_with_retries(url))
+    response: Optional[Response] = fail_gracefully(
+        lambda: get_with_retries(url)
+    )
     return response
 
 
-def _retrieve_text(response: Response) -> str:
+def _retrieve_text(response: Response) -> Optional[str]:
     soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
     return fail_gracefully(soup.get_text)
 
 
 def _next_page_link(soup: BeautifulSoup) -> Optional[str]:
-    more_link: Optional[BeautifulSoup] = soup.find("a", text="More")
-    return urljoin(SITE_LINK, more_link["href"]) if more_link else None
+    more_link_tag: Tag = _verify_element(soup.find("a", text="More"), Tag)
+    more_link: str = _verify_element(more_link_tag["href"], str)
+    return urljoin(SITE_LINK, more_link) if more_link else None
+
+
+def _verify_element(element: Optional[T], type_: Type[R]) -> R:
+    if not isinstance(element, type_):
+        raise ValueError("Invalid page element.")
+    return element

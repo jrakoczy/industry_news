@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from crawler.hackernews_crawler import articles
+from industry_news.crawler.hackernews_crawler import articles
 from datetime import datetime, timedelta
 
 

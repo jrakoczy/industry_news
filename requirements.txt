@@ -14,7 +14,7 @@ frozenlist==1.4.1
 greenlet==3.0.3
 idna==3.6
 # Editable Git install with no remote (industry-news==0.1)
--e /home/kuba/business/llm-python/src
+-e /home/kuba/business/industry-news
 jsonpatch==1.33
 jsonpointer==2.4
 langchain==0.1.6
