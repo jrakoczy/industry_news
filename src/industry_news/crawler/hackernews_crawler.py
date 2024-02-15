@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 import logging
 from bs4 import BeautifulSoup
 from typing import List, Optional, Tuple, Type, TypeVar
@@ -18,6 +19,11 @@ T = TypeVar("T")
 R = TypeVar("R")
 
 
+class CONTINUE_PAGINATING(Enum):
+    CONTINUE = True
+    STOP = False
+
+
 def articles(since: datetime, until: datetime = datetime.now()) -> List[str]:
     articles: List[str] = []
     page_link: Optional[str] = SITE_LINK
@@ -26,15 +32,15 @@ def articles(since: datetime, until: datetime = datetime.now()) -> List[str]:
         response: Response = get_with_retries(url=page_link)
         soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
         urls: List[str]
-        shouldTerminate: bool
+        paginating: CONTINUE_PAGINATING
 
-        urls, shouldTerminate = _retrieve_urls(
+        urls, paginating = _retrieve_urls(
             soup=soup, since=since, until=until
         )
 
         articles.extend(_articles_texts(urls))
 
-        if shouldTerminate:
+        if CONTINUE_PAGINATING.STOP == paginating:
             break
 
         page_link = _next_page_link(soup=soup)
@@ -44,31 +50,46 @@ def articles(since: datetime, until: datetime = datetime.now()) -> List[str]:
 
 def _retrieve_urls(
     soup: BeautifulSoup, since: datetime, until: datetime
-) -> Tuple[List[str], bool]:
+) -> Tuple[List[str], CONTINUE_PAGINATING]:
     urls: List[str] = []
-    shouldTerminate: bool = False
+    paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
 
     for row in soup.find_all("tr", class_="athing"):
-        verified_row: Tag = _verify_element(row, Tag)
+        title_row: Tag = _verify_element(row, Tag)
         title_span: Tag = _verify_element(
-            verified_row.find("span", class_="titleline"), Tag
+            title_row.find("span", class_="titleline"), Tag
         )
 
         if title_span:
-            link: str = _single_article_url(title_span)
-            publication_date: datetime = _single_article_publication_date(
-                verified_row
-            )
+            if _process_title(
+                title_span=title_span,
+                title_row=title_row,
+                urls=urls,
+                since=since,
+                until=until
+            ) == CONTINUE_PAGINATING.STOP:
+                return urls, CONTINUE_PAGINATING.STOP
 
-            if publication_date > until:
-                continue
-            elif publication_date >= since and publication_date <= until:
-                urls.append(link)
-            else:
-                shouldTerminate = True
-                break
+    return urls, paginating
 
-    return urls, shouldTerminate
+
+def _process_title(
+    title_span: Tag,
+    title_row: Tag,
+    urls: List[str],
+    since: datetime,
+    until: datetime
+) -> CONTINUE_PAGINATING:
+    link: str = _single_article_url(title_span)
+    publication_date: datetime = _single_article_publication_date(title_row)
+
+    if publication_date > until:
+        return CONTINUE_PAGINATING.CONTINUE
+    elif publication_date >= since and publication_date <= until:
+        urls.append(link)
+        return CONTINUE_PAGINATING.CONTINUE
+    else:
+        return CONTINUE_PAGINATING.STOP
 
 
 def _single_article_url(title_span: Tag) -> str:
