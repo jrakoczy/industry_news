@@ -1049,6 +1049,17 @@ files = [
 ]
 
 [[package]]
+name = "redditwarp"
+version = "1.2.0"
+description = "A library for interacting with the Reddit API."
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "redditwarp-1.2.0-py3-none-any.whl", hash = "sha256:36f7b2eca9d2e00f30ab02bdc872744a6f2f5f6c94e8463f7159fa12519ba094"},
+    {file = "redditwarp-1.2.0.tar.gz", hash = "sha256:e066f983a926423765d1f3126037267cc91e0378a00b3355a1113e3296d94869"},
+]
+
+[[package]]
 name = "requests"
 version = "2.31.0"
 description = "Python HTTP for Humans."
@@ -1391,4 +1402,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "474caf6a78b78a8832fc9cb23a5d5b9dfa389279e4513d52aa34a2c24dd258bb"
+content-hash = "0cbb06fd7df614a6eabf8dc4e3985262a399024e3b2f5cd1c6d3ffbe052bedd3"

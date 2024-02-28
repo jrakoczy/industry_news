@@ -1,4 +1,5 @@
 # .gitignore
+secrets.yml
 
 # Ignore the virtual environment
 .venv/
