@@ -6,7 +6,7 @@ from redditwarp.models.submission import LinkPost, Submission
 from industry_news.fetcher.fetcher import Fetcher, ArticleMetadata
 
 
-class RedditApiFetcher(Fetcher):
+class RedditApi(Fetcher):
 
     def __init__(
         self,
@@ -34,7 +34,7 @@ class RedditApiFetcher(Fetcher):
                 break
 
             article_metadata: ArticleMetadata = ArticleMetadata(
-                url=RedditApiFetcher._single_article_url(submission),
+                url=RedditApi._single_article_url(submission),
                 publication_date=publication_date,
                 score=submission.score,  # Upvotes - downvotes
             )

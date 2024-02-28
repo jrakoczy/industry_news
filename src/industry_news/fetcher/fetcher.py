@@ -34,7 +34,7 @@ class ArticleMetadata:
 class Fetcher(ABC):
     @abstractmethod
     def articles_metadata(
-        self, since: datetime, until: datetime = datetime.now()
+        self, since: datetime, until: datetime
     ) -> List[ArticleMetadata]:
         pass
 
