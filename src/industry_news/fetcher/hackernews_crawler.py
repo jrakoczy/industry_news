@@ -3,10 +3,12 @@ from enum import Enum
 from bs4 import BeautifulSoup
 from typing import List, Optional, Tuple
 from requests.models import Response
+import re
 from urllib.parse import urljoin, urlparse, ParseResult
+from industry_news.fetcher.fetcher import ArticleMetadata, Fetcher
 from industry_news.fetcher.web_tools import verify_page_element
 from industry_news.utils import delay_random
-from .web_tools import DELAY_RANGE, get_with_retries
+from .web_tools import DELAY_RANGE_S, get_with_retries
 from bs4.element import Tag, NavigableString
 
 PageElement = Tag | NavigableString
@@ -20,96 +22,132 @@ class CONTINUE_PAGINATING(Enum):
     STOP = False
 
 
-def articles(since: datetime, until: datetime = datetime.now()) -> List[str]:
-    article_urls: List[str] = []
-    page_link: Optional[ParseResult] = SITE_LINK
+class HackerNewsCrawler(Fetcher):
 
-    while page_link:
-        response: Response = get_with_retries(url=page_link)
-        soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
-        retrieved_urls: List[str]
-        paginating: CONTINUE_PAGINATING
+    def __init__(self, site_link: ParseResult = SITE_LINK) -> None:
+        super().__init__()
+        self._site_link = site_link
 
-        retrieved_urls, paginating = _article_urls(
-            soup=soup, since=since, until=until
+    def article_urls(
+        self, since: datetime, until: datetime = datetime.now()
+    ) -> List[ArticleMetadata]:
+        articles_metadata: List[ArticleMetadata] = []
+        page_link: Optional[ParseResult] = self._site_link
+
+        while page_link:
+            response: Response = get_with_retries(url=page_link)
+            soup: BeautifulSoup = BeautifulSoup(
+                response.content, "html.parser"
+            )
+            retrieved_metadata: List[ArticleMetadata]
+            paginating: CONTINUE_PAGINATING
+
+            retrieved_metadata, paginating = HackerNewsCrawler._urls_from_page(
+                soup=soup, since=since, until=until
+            )
+
+            articles_metadata.extend(retrieved_metadata)
+
+            if CONTINUE_PAGINATING.STOP == paginating:
+                break
+
+            page_link = self._next_page_link(soup=soup)
+            delay_random(DELAY_RANGE_S)
+
+        return articles_metadata
+
+    @staticmethod
+    def _urls_from_page(
+        soup: BeautifulSoup, since: datetime, until: datetime
+    ) -> Tuple[List[ArticleMetadata], CONTINUE_PAGINATING]:
+        urls: List[ArticleMetadata] = []
+        paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
+
+        for row in soup.find_all("tr", class_="athing"):
+            title_row: Tag = verify_page_element(row, Tag)
+            title_span: Tag = verify_page_element(
+                title_row.find("span", class_="titleline"), Tag
+            )
+
+            if title_span:
+                if (
+                    HackerNewsCrawler._process_title(
+                        title_span=title_span,
+                        title_row=title_row,
+                        urls=urls,
+                        since=since,
+                        until=until,
+                    )
+                    == CONTINUE_PAGINATING.STOP
+                ):
+                    return urls, CONTINUE_PAGINATING.STOP
+
+        return urls, paginating
+
+    @staticmethod
+    def _process_title(
+        title_span: Tag,
+        title_row: Tag,
+        urls: List[ArticleMetadata],
+        since: datetime,
+        until: datetime,
+    ) -> CONTINUE_PAGINATING:
+        link: ParseResult = HackerNewsCrawler._single_article_url(title_span)
+        publication_date: datetime = (
+            HackerNewsCrawler._single_article_publication_date(title_row)
         )
+        score: int = HackerNewsCrawler._single_article_score(title_row)
 
-        article_urls.extend(retrieved_urls)
-
-        if CONTINUE_PAGINATING.STOP == paginating:
-            break
-
-        page_link = _next_page_link(soup=soup)
-        delay_random(DELAY_RANGE)
-
-    return article_urls
-
-
-def _article_urls(
-    soup: BeautifulSoup, since: datetime, until: datetime
-) -> Tuple[List[str], CONTINUE_PAGINATING]:
-    urls: List[str] = []
-    paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
-
-    for row in soup.find_all("tr", class_="athing"):
-        title_row: Tag = verify_page_element(row, Tag)
-        title_span: Tag = verify_page_element(
-            title_row.find("span", class_="titleline"), Tag
-        )
-
-        if title_span:
-            if (
-                _process_title(
-                    title_span=title_span,
-                    title_row=title_row,
-                    urls=urls,
-                    since=since,
-                    until=until,
+        if publication_date > until:
+            return CONTINUE_PAGINATING.CONTINUE
+        elif publication_date >= since and publication_date <= until:
+            urls.append(
+                ArticleMetadata(
+                    url=link, publication_date=publication_date, score=score
                 )
-                == CONTINUE_PAGINATING.STOP
-            ):
-                return urls, CONTINUE_PAGINATING.STOP
+            )
+            return CONTINUE_PAGINATING.CONTINUE
+        else:
+            return CONTINUE_PAGINATING.STOP
 
-    return urls, paginating
+    @staticmethod
+    def _single_article_url(title_span: Tag) -> ParseResult:
+        link_tag: Tag = verify_page_element(title_span.find("a"), Tag)
+        link: str = verify_page_element(link_tag["href"], str)
+        absolute_link: str = (
+            link if link.startswith("http") else urljoin(BASE_URL, link)
+        )
+        return urlparse(absolute_link)
 
+    @staticmethod
+    def _single_article_publication_date(row: Tag) -> datetime:
+        date_span: Tag = HackerNewsCrawler._span_from_next_row(row, "age")
+        publication_date: str = verify_page_element(date_span["title"], str)
+        return datetime.strptime(publication_date, "%Y-%m-%dT%H:%M:%S")
 
-def _process_title(
-    title_span: Tag,
-    title_row: Tag,
-    urls: List[str],
-    since: datetime,
-    until: datetime,
-) -> CONTINUE_PAGINATING:
-    link: str = _single_article_url(title_span)
-    publication_date: datetime = _single_article_publication_date(title_row)
+    @staticmethod
+    def _single_article_score(row: Tag) -> int:
+        score_span: Tag = HackerNewsCrawler._span_from_next_row(row, "score")
+        score: str = verify_page_element(score_span.get_text(), str)
+        match = re.search(r"\d+", score)
 
-    if publication_date > until:
-        return CONTINUE_PAGINATING.CONTINUE
-    elif publication_date >= since and publication_date <= until:
-        urls.append(link)
-        return CONTINUE_PAGINATING.CONTINUE
-    else:
-        return CONTINUE_PAGINATING.STOP
+        if match:
+            return int(match.group())
+        else:
+            raise ValueError("Couldn't parse the score.")
 
+    @staticmethod
+    def _span_from_next_row(row: Tag, class_: str) -> Tag:
+        next_row: Tag = verify_page_element(row.find_next_sibling("tr"), Tag)
+        return verify_page_element(next_row.find("span", class_=class_), Tag)
 
-def _single_article_url(title_span: Tag) -> str:
-    link_tag: Tag = verify_page_element(title_span.find("a"), Tag)
-    link: str = verify_page_element(link_tag["href"], str)
-    return link if link.startswith("http") else urljoin(BASE_URL, link)
-
-
-def _single_article_publication_date(row: Tag) -> datetime:
-    next_row: Tag = verify_page_element(row.find_next_sibling("tr"), Tag)
-    date_span: Tag = verify_page_element(
-        next_row.find("span", class_="age"), Tag
-    )
-    publication_date: str = verify_page_element(date_span["title"], str)
-    return datetime.strptime(publication_date, "%Y-%m-%dT%H:%M:%S")
-
-
-def _next_page_link(soup: BeautifulSoup) -> Optional[ParseResult]:
-    more_link_tag: Tag = verify_page_element(soup.find("a", text="More"), Tag)
-    more_link: str = verify_page_element(more_link_tag["href"], str)
-    return (
-        urlparse(urljoin(SITE_LINK.geturl(), more_link)) if more_link else None
-    )
+    def _next_page_link(self, soup: BeautifulSoup) -> Optional[ParseResult]:
+        more_link_tag: Tag = verify_page_element(
+            soup.find("a", text="More"), Tag
+        )
+        more_link: str = verify_page_element(more_link_tag["href"], str)
+        return (
+            urlparse(urljoin(self._site_link.geturl(), more_link))
+            if more_link
+            else None
+        )

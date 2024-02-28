@@ -8,7 +8,7 @@ from industry_news.utils import delay_random, fail_gracefully
 
 LOGGER = logging.getLogger(__name__)
 RETRIES = 3
-DELAY_RANGE: Tuple[int, int] = (1, 3)
+DELAY_RANGE_S: Tuple[int, int] = (1, 3)
 USER_AGENT: str = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     + "(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
@@ -27,7 +27,7 @@ def verify_page_element(element: Optional[T], type_: Type[R]) -> R:
 def get_with_retries(
     url: urllib.parse.ParseResult,
     retries: int = RETRIES,
-    delay_range: Tuple[int, int] = DELAY_RANGE,
+    delay_range: Tuple[int, int] = DELAY_RANGE_S,
     user_agent: str = USER_AGENT,
 ) -> requests.models.Response:
     for _ in range(retries - 1):
@@ -42,7 +42,7 @@ def get_with_retries(
     return requests.get(url=url.geturl(), headers=headers)
 
 
-def fetch_site_texts(urls: List[urllib.parse.ParseResult]) -> List[str]:
+def fetch_sites_texts(urls: List[urllib.parse.ParseResult]) -> List[str]:
     responses: List[Response] = [
         response
         for url in urls

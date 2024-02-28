@@ -6,8 +6,8 @@ from typing import Callable, Optional, Tuple, TypeVar
 T = TypeVar("T")
 
 
-def delay_random(delay_range: Tuple[int, int]):
-    delay: float = random.uniform(delay_range[0], delay_range[1])
+def delay_random(delay_range_s: Tuple[int, int]):
+    delay: float = random.uniform(delay_range_s[0], delay_range_s[1])
     time.sleep(delay)
 
 
