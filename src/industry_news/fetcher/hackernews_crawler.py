@@ -1,34 +1,31 @@
 from datetime import datetime
-from enum import Enum
 from bs4 import BeautifulSoup
 from typing import List, Optional, Tuple
 from requests.models import Response
 import re
 from urllib.parse import urljoin, urlparse, ParseResult
-from industry_news.fetcher.fetcher import ArticleMetadata, Fetcher
+from industry_news.fetcher.fetcher import (
+    CONTINUE_PAGINATING,
+    ArticleMetadata,
+    Fetcher,
+)
 from industry_news.fetcher.web_tools import verify_page_element
 from industry_news.utils import delay_random
 from .web_tools import DELAY_RANGE_S, get_with_retries
-from bs4.element import Tag, NavigableString
+from bs4.element import Tag
 
-PageElement = Tag | NavigableString
 
 BASE_URL: str = "https://news.ycombinator.com"
 SITE_LINK: ParseResult = urlparse(urljoin(BASE_URL, "newest"))
-
-
-class CONTINUE_PAGINATING(Enum):
-    CONTINUE = True
-    STOP = False
 
 
 class HackerNewsCrawler(Fetcher):
 
     def __init__(self, site_link: ParseResult = SITE_LINK) -> None:
         super().__init__()
-        self._site_link = site_link
+        self._site_link = site_link  # Possible to pass other sorting orders
 
-    def article_urls(
+    def articles_metadata(
         self, since: datetime, until: datetime = datetime.now()
     ) -> List[ArticleMetadata]:
         articles_metadata: List[ArticleMetadata] = []
@@ -42,8 +39,10 @@ class HackerNewsCrawler(Fetcher):
             retrieved_metadata: List[ArticleMetadata]
             paginating: CONTINUE_PAGINATING
 
-            retrieved_metadata, paginating = HackerNewsCrawler._urls_from_page(
-                soup=soup, since=since, until=until
+            retrieved_metadata, paginating = (
+                HackerNewsCrawler._extract_articles_from_page(
+                    soup=soup, since=since, until=until
+                )
             )
 
             articles_metadata.extend(retrieved_metadata)
@@ -55,9 +54,9 @@ class HackerNewsCrawler(Fetcher):
             delay_random(DELAY_RANGE_S)
 
         return articles_metadata
-
+    
     @staticmethod
-    def _urls_from_page(
+    def _extract_articles_from_page(
         soup: BeautifulSoup, since: datetime, until: datetime
     ) -> Tuple[List[ArticleMetadata], CONTINUE_PAGINATING]:
         urls: List[ArticleMetadata] = []
@@ -71,7 +70,7 @@ class HackerNewsCrawler(Fetcher):
 
             if title_span:
                 if (
-                    HackerNewsCrawler._process_title(
+                    HackerNewsCrawler._process_title_row(
                         title_span=title_span,
                         title_row=title_row,
                         urls=urls,
@@ -85,7 +84,7 @@ class HackerNewsCrawler(Fetcher):
         return urls, paginating
 
     @staticmethod
-    def _process_title(
+    def _process_title_row(
         title_span: Tag,
         title_row: Tag,
         urls: List[ArticleMetadata],

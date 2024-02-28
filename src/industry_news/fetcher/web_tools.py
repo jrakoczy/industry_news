@@ -1,12 +1,8 @@
-from typing import List, Optional, Type, TypeVar, Tuple
-import logging
+from typing import Optional, Type, TypeVar, Tuple
 import requests
 import urllib
-from bs4 import BeautifulSoup
-from requests.models import Response
-from industry_news.utils import delay_random, fail_gracefully
+from industry_news.utils import delay_random
 
-LOGGER = logging.getLogger(__name__)
 RETRIES = 3
 DELAY_RANGE_S: Tuple[int, int] = (1, 3)
 USER_AGENT: str = (
@@ -40,30 +36,3 @@ def get_with_retries(
         except requests.RequestException:
             delay_random(delay_range)
     return requests.get(url=url.geturl(), headers=headers)
-
-
-def fetch_sites_texts(urls: List[urllib.parse.ParseResult]) -> List[str]:
-    responses: List[Response] = [
-        response
-        for url in urls
-        if (response := _send_request(url)) is not None
-    ]
-    texts: List[str] = [
-        text
-        for response in responses
-        if (text := _retrieve_text(response)) is not None
-    ]
-    return texts
-
-
-def _send_request(url: urllib.parse.ParseResult) -> Optional[Response]:
-    LOGGER.info(f"Retrieving article from {url.geturl()}")
-    response: Optional[Response] = fail_gracefully(
-        lambda: get_with_retries(url)
-    )
-    return response
-
-
-def _retrieve_text(response: Response) -> Optional[str]:
-    soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
-    return fail_gracefully(soup.get_text)
