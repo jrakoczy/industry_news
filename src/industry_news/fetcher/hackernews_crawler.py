@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from typing import List, Optional, Tuple
 from requests.models import Response
 from urllib.parse import urljoin, urlparse, ParseResult
-from industry_news.crawler.web_tools import verify_page_element
+from industry_news.fetcher.web_tools import verify_page_element
 from industry_news.utils import delay_random
 from .web_tools import DELAY_RANGE, get_with_retries
 from bs4.element import Tag, NavigableString

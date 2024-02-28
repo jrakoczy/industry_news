@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from industry_news.crawler.hackernews_crawler import articles
+from industry_news.fetcher.hackernews_crawler import articles
 from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO)
