@@ -11,12 +11,12 @@ from industry_news.fetcher.fetcher import (
 )
 from industry_news.fetcher.web_tools import verify_page_element
 from industry_news.utils import delay_random
-from .web_tools import DELAY_RANGE_S, get_with_retries
+from .web_tools import DELAY_RANGE_S, construct_url, get_with_retries
 from bs4.element import Tag
 
 
 BASE_URL: str = "https://news.ycombinator.com"
-SITE_LINK: ParseResult = urlparse(urljoin(BASE_URL, "newest"))
+SITE_LINK: ParseResult = construct_url(BASE_URL, "newest")
 
 
 class HackerNewsCrawler(Fetcher):
@@ -54,7 +54,7 @@ class HackerNewsCrawler(Fetcher):
             delay_random(DELAY_RANGE_S)
 
         return articles_metadata
-    
+
     @staticmethod
     def _extract_articles_from_page(
         soup: BeautifulSoup, since: datetime, until: datetime
@@ -91,23 +91,41 @@ class HackerNewsCrawler(Fetcher):
         since: datetime,
         until: datetime,
     ) -> CONTINUE_PAGINATING:
-        link: ParseResult = HackerNewsCrawler._single_article_url(title_span)
-        publication_date: datetime = (
-            HackerNewsCrawler._single_article_publication_date(title_row)
-        )
-        score: int = HackerNewsCrawler._single_article_score(title_row)
-
-        if publication_date > until:
-            return CONTINUE_PAGINATING.CONTINUE
-        elif publication_date >= since and publication_date <= until:
-            urls.append(
-                ArticleMetadata(
-                    url=link, publication_date=publication_date, score=score
-                )
+        article_metadata: ArticleMetadata = (
+            HackerNewsCrawler._single_article_metadata(
+                title_span=title_span, title_row=title_row
             )
+        )
+        isWithinTimeFrame: bool = (
+            article_metadata.publication_date >= since
+            and article_metadata.publication_date <= until
+        )
+
+        if article_metadata.publication_date > until:
+            return CONTINUE_PAGINATING.CONTINUE
+        elif isWithinTimeFrame:
+            urls.append(article_metadata)
             return CONTINUE_PAGINATING.CONTINUE
         else:
             return CONTINUE_PAGINATING.STOP
+
+    @staticmethod
+    def _single_article_metadata(
+        title_span: Tag, title_row: Tag
+    ) -> ArticleMetadata:
+        return ArticleMetadata(
+            url=HackerNewsCrawler._single_article_url(title_span),
+            title=HackerNewsCrawler._single_article_title(title_span),
+            publication_date=HackerNewsCrawler._single_article_publication_date(
+                title_row
+            ),
+            score=HackerNewsCrawler._single_article_score(title_row),
+        )
+
+    @staticmethod
+    def _single_article_title(title_span: Tag) -> str:
+        link_tag: Tag = verify_page_element(title_span.find("a"), Tag)
+        return verify_page_element(link_tag.get_text(), str)
 
     @staticmethod
     def _single_article_url(title_span: Tag) -> ParseResult:

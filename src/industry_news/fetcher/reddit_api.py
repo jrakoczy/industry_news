@@ -35,8 +35,10 @@ class RedditApi(Fetcher):
 
             article_metadata: ArticleMetadata = ArticleMetadata(
                 url=RedditApi._single_article_url(submission),
+                title=submission.title,
                 publication_date=publication_date,
                 score=submission.score,  # Upvotes - downvotes
+                context={"subreddit": submission.subreddit.name}
             )
             articles.append(article_metadata)
 

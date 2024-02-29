@@ -2,17 +2,17 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from typing import List
 from requests.models import Response
-from urllib.parse import urljoin, urlparse, ParseResult
+from urllib.parse import urlparse, ParseResult
 from industry_news.fetcher.fetcher import (
     ArticleMetadata,
     Fetcher,
 )
 from industry_news.fetcher.web_tools import verify_page_element
-from .web_tools import get_with_retries
+from .web_tools import construct_url, get_with_retries
 from bs4.element import Tag
 
 BASE_URL: str = "https://www.futuretools.io"
-SITE_LINK: ParseResult = urlparse(urljoin(BASE_URL, "news"))
+SITE_LINK: ParseResult = construct_url(BASE_URL, "news")
 
 
 class FutureToolsCrawler(Fetcher):
@@ -46,6 +46,7 @@ class FutureToolsCrawler(Fetcher):
 
             articles.append(
                 ArticleMetadata(
+                    title=FutureToolsCrawler._single_article_title(item),
                     url=FutureToolsCrawler._single_article_url(item),
                     publication_date=publication_date,
                     score=0,  # No scores on the site
@@ -59,6 +60,12 @@ class FutureToolsCrawler(Fetcher):
         link_tag: Tag = verify_page_element(div.find("a"), Tag)
         url: str = verify_page_element(link_tag["href"], str)
         return urlparse(url)
+
+    @staticmethod
+    def _single_article_title(div: Tag) -> str:
+        link_tag: Tag = verify_page_element(div.find("a"), Tag)
+        first_div: Tag = verify_page_element(link_tag.find("div"), Tag)
+        return first_div.get_text()
 
     @staticmethod
     def _single_article_publication_date(div: Tag) -> datetime:

@@ -11,7 +11,7 @@ BASE_URL: str = (
 SITE_LINK: ParseResult = construct_url(
     base_url=BASE_URL,
     relative_path="researchhub_unified_document/get_unified_documents/",
-    params={"ordering": "new", "time": "all", "type": "all"}
+    query_params={"ordering": "new", "time": "all", "type": "all"}
 )
 
 

@@ -1,6 +1,7 @@
 from typing import Dict, Optional, Type, TypeVar, Tuple
 import requests
-from urllib.parse import urljoin, urlparse, urlunparse, urlencode, ParseResult
+from furl import furl
+from urllib.parse import urlparse, ParseResult
 from industry_news.utils import delay_random
 
 RETRIES: int = 3
@@ -14,20 +15,21 @@ T = TypeVar("T")
 R = TypeVar("R")
 
 
-def construct_url(
-    base_url: str, relative_path: str, params: Dict[str, str]
+def modify_url_query(
+    url: ParseResult, query_params: Dict[str, str]
 ) -> ParseResult:
-    url: ParseResult = urlparse(base_url)
-    new_path: str = urljoin(base_url, relative_path)
-    new_query: str = urlencode(params)
-    return ParseResult(
-        scheme=url.scheme,
-        netloc=url.netloc,
-        path=new_path,
-        params=url.params,
-        query=new_query,
-        fragment=url.fragment,
-    )
+    mutable_url: furl = furl(url.geturl())
+    mutable_url.args.update(query_params)
+    return urlparse(mutable_url.url)
+
+
+def construct_url(
+    base_url: str, relative_path: str, query_params: Dict[str, str] = {}
+) -> ParseResult:
+    url: furl = furl(base_url)
+    url /= relative_path
+    url.args = query_params
+    return urlparse(url.url)
 
 
 def verify_page_element(element: Optional[T], type_: Type[R]) -> R:

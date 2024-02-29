@@ -1,9 +1,9 @@
 from datetime import datetime
 from abc import ABC, abstractmethod
 from enum import Enum
-import urllib.parse
+from urllib.parse import ParseResult
 import logging
-from typing import List, Optional
+from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
 from industry_news.fetcher.web_tools import get_with_retries
 from requests.models import Response
@@ -12,13 +12,21 @@ from industry_news.utils import fail_gracefully
 LOGGER = logging.getLogger(__name__)
 
 
+class CONTINUE_PAGINATING(Enum):
+    CONTINUE = True
+    STOP = False
+
+
 class ArticleMetadata:
     def __init__(
         self,
-        url: urllib.parse.ParseResult,
+        title: str,
+        url: ParseResult,
         publication_date: datetime,
         score: int,
+        context: Dict[str, str] = {}
     ):
+        self.title = title
         self.url = url
         self.publication_date = publication_date
         self.score = score
@@ -39,7 +47,7 @@ class Fetcher(ABC):
         pass
 
 
-def fetch_sites_texts(urls: List[urllib.parse.ParseResult]) -> List[str]:
+def fetch_sites_texts(urls: List[ParseResult]) -> List[str]:
     responses: List[Response] = [
         response
         for url in urls
@@ -53,7 +61,7 @@ def fetch_sites_texts(urls: List[urllib.parse.ParseResult]) -> List[str]:
     return texts
 
 
-def _send_request(url: urllib.parse.ParseResult) -> Optional[Response]:
+def _send_request(url: ParseResult) -> Optional[Response]:
     LOGGER.info(f"Retrieving article from {url.geturl()}")
     response: Optional[Response] = fail_gracefully(
         lambda: get_with_retries(url)
@@ -64,8 +72,3 @@ def _send_request(url: urllib.parse.ParseResult) -> Optional[Response]:
 def _retrieve_text(response: Response) -> Optional[str]:
     soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
     return fail_gracefully(soup.get_text)
-
-
-class CONTINUE_PAGINATING(Enum):
-    CONTINUE = True
-    STOP = False
