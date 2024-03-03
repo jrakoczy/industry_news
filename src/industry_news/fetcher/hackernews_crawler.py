@@ -96,14 +96,10 @@ class HackerNewsCrawler(Fetcher):
                 title_span=title_span, title_row=title_row
             )
         )
-        isWithinTimeFrame: bool = (
-            article_metadata.publication_date >= since
-            and article_metadata.publication_date <= until
-        )
 
         if article_metadata.publication_date > until:
             return CONTINUE_PAGINATING.CONTINUE
-        elif isWithinTimeFrame:
+        elif until >= article_metadata.publication_date >= since:
             urls.append(article_metadata)
             return CONTINUE_PAGINATING.CONTINUE
         else:
@@ -164,7 +160,7 @@ class HackerNewsCrawler(Fetcher):
         )
         more_link: str = verify_page_element(more_link_tag["href"], str)
         return (
-            urlparse(urljoin(self._site_link.geturl(), more_link))
+            construct_url(self._site_link.geturl(), more_link)
             if more_link
             else None
         )

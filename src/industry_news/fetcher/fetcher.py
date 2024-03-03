@@ -30,6 +30,7 @@ class ArticleMetadata:
         self.url = url
         self.publication_date = publication_date
         self.score = score
+        self.context = context
 
     def __str__(self):
         return (
@@ -37,7 +38,6 @@ class ArticleMetadata:
             f"publication_date={self.publication_date}, "
             f"score={self.score})"
         )
-
 
 class Fetcher(ABC):
     @abstractmethod
