@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from bs4 import BeautifulSoup
 from typing import List
 from requests.models import Response
@@ -11,6 +12,7 @@ from industry_news.fetcher.web_tools import verify_page_element
 from .web_tools import construct_url, get_with_retries
 from bs4.element import Tag
 
+LOGGER = logging.getLogger(__name__)
 BASE_URL: str = "https://www.futuretools.io"
 SITE_LINK: ParseResult = construct_url(BASE_URL, "news")
 
@@ -20,6 +22,11 @@ class FutureToolsCrawler(Fetcher):
     def articles_metadata(
         self, since: datetime, until: datetime = datetime.now()
     ) -> List[ArticleMetadata]:
+        LOGGER.info(
+            "Fetching articles from FutureTools between %s and %s",
+            since,
+            until,
+        )
         response: Response = get_with_retries(url=SITE_LINK)
         soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
         return FutureToolsCrawler._articles_from_page(

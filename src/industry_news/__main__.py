@@ -1,10 +1,8 @@
 import logging
-from typing import Dict, List, Any
+from typing import List
 from industry_news.fetcher.fetcher import ArticleMetadata
 from datetime import datetime, timedelta
-
-from industry_news.fetcher.reddit_api import RedditApi
-from industry_news.utils import load_secrets
+from industry_news.fetcher.researchhub_api import ResearchHubApi
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
@@ -13,12 +11,9 @@ LOGGER = logging.getLogger(__name__)
 def main():
     LOGGER.info("Fetching article titles...")
     since: datetime = datetime.now() - timedelta(hours=2)
-    secrets: Dict[str, Any] = load_secrets()["reddit"]
-    results: List[ArticleMetadata] = RedditApi(
-        client_id=secrets["client_id"],
-        client_secret=secrets["client_secret"],
-        subreddit="Games",
-    ).articles_metadata(since=since)
+    results: List[ArticleMetadata] = ResearchHubApi().articles_metadata(
+        since=since
+    )
     [print(metadata) for metadata in results]
 
 

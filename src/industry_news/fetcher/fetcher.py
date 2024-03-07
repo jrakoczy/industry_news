@@ -4,10 +4,12 @@ from enum import Enum
 from urllib.parse import ParseResult
 import logging
 from typing import Dict, List, Optional
+from dataclasses import dataclass, field
 from bs4 import BeautifulSoup
 from industry_news.fetcher.web_tools import get_with_retries
 from requests.models import Response
 from industry_news.utils import fail_gracefully
+from collections import defaultdict
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,27 +19,14 @@ class CONTINUE_PAGINATING(Enum):
     STOP = False
 
 
+@dataclass
 class ArticleMetadata:
-    def __init__(
-        self,
-        title: str,
-        url: ParseResult,
-        publication_date: datetime,
-        score: int,
-        context: Dict[str, str] = {}
-    ):
-        self.title = title
-        self.url = url
-        self.publication_date = publication_date
-        self.score = score
-        self.context = context
+    title: str
+    url: ParseResult
+    publication_date: datetime
+    score: int
+    context: Dict[str, str] = field(default_factory=lambda: defaultdict(str))
 
-    def __str__(self):
-        return (
-            f"ArticleMetadata(url={self.url.geturl()}, "
-            f"publication_date={self.publication_date}, "
-            f"score={self.score})"
-        )
 
 class Fetcher(ABC):
     @abstractmethod
