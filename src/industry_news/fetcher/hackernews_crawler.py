@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 from bs4 import BeautifulSoup
 from typing import List, Optional, Tuple
 from requests.models import Response
@@ -15,6 +16,7 @@ from .web_tools import DELAY_RANGE_S, construct_url, get_with_retries
 from bs4.element import Tag
 
 
+LOGGER = logging.getLogger(__name__)
 BASE_URL: str = "https://news.ycombinator.com"
 SITE_LINK: ParseResult = construct_url(BASE_URL, "newest")
 
@@ -32,6 +34,9 @@ class HackerNewsCrawler(Fetcher):
         page_link: Optional[ParseResult] = self._site_link
 
         while page_link:
+            LOGGER.info(
+                "Fetching articles from HackerNews: %s", page_link.geturl()
+            )
             response: Response = get_with_retries(url=page_link)
             soup: BeautifulSoup = BeautifulSoup(
                 response.content, "html.parser"

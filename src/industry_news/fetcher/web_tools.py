@@ -2,9 +2,8 @@ from typing import Dict, Optional, Type, TypeVar, Tuple
 import requests
 from furl import furl
 from urllib.parse import urlparse, ParseResult
-from industry_news.utils import delay_random
+from industry_news.utils import retry
 
-RETRIES: int = 3
 DELAY_RANGE_S: Tuple[int, int] = (1, 3)
 USER_AGENT: str = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
@@ -40,17 +39,8 @@ def verify_page_element(element: Optional[T], type_: Type[R]) -> R:
 
 def get_with_retries(
     url: ParseResult,
-    retries: int = RETRIES,
-    delay_range: Tuple[int, int] = DELAY_RANGE_S,
+    delay_range_s: Tuple[int, int] = DELAY_RANGE_S,
     user_agent: str = USER_AGENT,
 ) -> requests.models.Response:
-    for _ in range(retries - 1):
-        try:
-            headers: dict = {"User-Agent": user_agent}
-            response: requests.models.Response = requests.get(
-                url=url.geturl(), headers=headers
-            )
-            return response
-        except requests.RequestException:
-            delay_random(delay_range)
-    return requests.get(url=url.geturl(), headers=headers)
+    headers: dict = {"User-Agent": user_agent}
+    return retry(lambda: requests.get(url.geturl(), headers), delay_range_s)

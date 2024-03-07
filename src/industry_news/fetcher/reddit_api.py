@@ -5,6 +5,7 @@ from typing import List, cast
 from redditwarp.SYNC import Client
 from redditwarp.models.submission import LinkPost, Submission
 from industry_news.fetcher.fetcher import Fetcher, ArticleMetadata
+from industry_news.utils import retry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +22,14 @@ class RedditApi(Fetcher):
         self._subreddit: str = subreddit
 
     def articles_metadata(
+        self, since: datetime, until: datetime = datetime.now()
+    ) -> List[ArticleMetadata]:
+        return retry(  # No convenient retry mechanism in redditwarp
+            lambda: self.articles_metadata_wihtout_retries(since, until),
+            delay_range_s=(5, 5),
+        )
+
+    def articles_metadata_wihtout_retries(
         self, since: datetime, until: datetime = datetime.now()
     ) -> List[ArticleMetadata]:
         LOGGER.info(

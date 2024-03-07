@@ -6,6 +6,7 @@ from typing import Callable, Optional, Tuple, TypeVar
 from typing import Dict, Any
 
 T = TypeVar("T")
+RETRIES = 3
 
 
 def load_secrets() -> Dict[str, Any]:
@@ -19,9 +20,23 @@ def delay_random(delay_range_s: Tuple[int, int]):
     time.sleep(delay)
 
 
-def fail_gracefully(func: Callable[..., T], *args, **kwargs) -> Optional[T]:
+def fail_gracefully(func: Callable[..., T]) -> Optional[T]:
     try:
-        return func(*args, **kwargs)
+        return func()
     except Exception as e:
         logging.exception(e)
         return None
+
+
+def retry(
+    func: Callable[..., T],
+    delay_range_s: Tuple[int, int],
+    retries: int = RETRIES
+) -> T:
+    for _ in range(retries - 1):
+        try:
+            return func()
+        except Exception as e:
+            logging.exception(e)
+            delay_random(delay_range_s)
+    return func()

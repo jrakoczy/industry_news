@@ -73,7 +73,7 @@ class ResearchHubApi(Fetcher):
             )
             paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
 
-            if metadata is None:
+            if metadata is None:  # Skip non-article posts
                 continue
             if metadata.publication_date < since:
                 paginating = CONTINUE_PAGINATING.STOP
