@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from industry_news.fetcher.fetcher import ArticleMetadata
+from industry_news.fetcher.article import ArticleMetadata
 from datetime import datetime, timedelta
 from industry_news.fetcher.researchhub_api import ResearchHubApi
 

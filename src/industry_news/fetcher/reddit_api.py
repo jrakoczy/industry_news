@@ -4,7 +4,8 @@ from datetime import datetime
 from typing import List, cast
 from redditwarp.SYNC import Client
 from redditwarp.models.submission import LinkPost, Submission
-from industry_news.fetcher.fetcher import Fetcher, ArticleMetadata
+from industry_news.fetcher.article import ArticleMetadata
+from industry_news.fetcher.fetcher import Fetcher
 from industry_news.utils import retry
 
 LOGGER = logging.getLogger(__name__)

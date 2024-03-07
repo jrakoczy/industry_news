@@ -4,8 +4,8 @@ from bs4 import BeautifulSoup
 from typing import List
 from requests.models import Response
 from urllib.parse import urlparse, ParseResult
+from industry_news.fetcher.article import ArticleMetadata
 from industry_news.fetcher.fetcher import (
-    ArticleMetadata,
     Fetcher,
 )
 from industry_news.fetcher.web_tools import verify_page_element

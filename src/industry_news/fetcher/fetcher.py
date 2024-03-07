@@ -3,13 +3,12 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from urllib.parse import ParseResult
 import logging
-from typing import Dict, List, Optional
-from dataclasses import dataclass, field
+from typing import List, Optional
 from bs4 import BeautifulSoup
+from industry_news.fetcher.article import ArticleMetadata
 from industry_news.fetcher.web_tools import get_with_retries
 from requests.models import Response
 from industry_news.utils import fail_gracefully
-from collections import defaultdict
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,15 +16,6 @@ LOGGER = logging.getLogger(__name__)
 class CONTINUE_PAGINATING(Enum):
     CONTINUE = True
     STOP = False
-
-
-@dataclass
-class ArticleMetadata:
-    title: str
-    url: ParseResult
-    publication_date: datetime
-    score: int
-    context: Dict[str, str] = field(default_factory=lambda: defaultdict(str))
 
 
 class Fetcher(ABC):

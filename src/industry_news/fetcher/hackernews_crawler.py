@@ -5,9 +5,9 @@ from typing import List, Optional, Tuple
 from requests.models import Response
 import re
 from urllib.parse import urljoin, urlparse, ParseResult
+from industry_news.fetcher.article import ArticleMetadata
 from industry_news.fetcher.fetcher import (
     CONTINUE_PAGINATING,
-    ArticleMetadata,
     Fetcher,
 )
 from industry_news.fetcher.web_tools import verify_page_element

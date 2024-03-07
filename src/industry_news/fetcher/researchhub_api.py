@@ -3,8 +3,8 @@ import logging
 from typing import Any, List, Optional
 from urllib.parse import ParseResult, urlparse
 import requests
+from industry_news.fetcher.article import ArticleMetadata
 from industry_news.fetcher.fetcher import (
-    ArticleMetadata,
     Fetcher,
     CONTINUE_PAGINATING,
 )
@@ -35,7 +35,7 @@ class ResearchHubApi(Fetcher):
         page: int = 1
         articles: List[ArticleMetadata] = []
         paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
-        response: requests.Response = requests.get(PAGE_LINK.geturl())
+        response: requests.Response = get_with_retries(PAGE_LINK)
 
         while paginating == CONTINUE_PAGINATING.CONTINUE:
             LOGGER.info("Fetching articles from ResearchHub, page: %d", page)
