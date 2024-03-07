@@ -17,5 +17,5 @@ class ArticleMetadata:
 @dataclass
 class Article:
     metadata: ArticleMetadata
-    content: Optional[str]
-    summary: Optional[str]
+    content: Optional[str] = None
+    summary: Optional[str] = None

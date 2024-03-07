@@ -3,9 +3,8 @@ import logging
 from typing import Any, List, Optional
 from urllib.parse import ParseResult, urlparse
 import requests
-from industry_news.fetcher.article import ArticleMetadata
+from industry_news.fetcher.article import Article, ArticleMetadata
 from industry_news.fetcher.fetcher import (
-    Fetcher,
     CONTINUE_PAGINATING,
 )
 from industry_news.fetcher.web_tools import (
@@ -26,14 +25,14 @@ PAGE_LINK: ParseResult = construct_url(
 )
 
 
-class ResearchHubApi(Fetcher):
+class ResearchHubApi:
 
-    def articles_metadata(
+    def articles(
         self, since: datetime, until: datetime = datetime.now()
-    ) -> List[ArticleMetadata]:
+    ) -> List[Article]:
 
         page: int = 1
-        articles: List[ArticleMetadata] = []
+        articles: List[Article] = []
         paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
         response: requests.Response = get_with_retries(PAGE_LINK)
 
@@ -64,7 +63,7 @@ class ResearchHubApi(Fetcher):
     def _process_results_page(
         since: datetime,
         until: datetime,
-        articles: List[ArticleMetadata],
+        articles: List[Article],
         posts: List[Any],
     ) -> CONTINUE_PAGINATING:
         for post in posts:
@@ -79,7 +78,12 @@ class ResearchHubApi(Fetcher):
                 paginating = CONTINUE_PAGINATING.STOP
                 break
             if until >= metadata.publication_date >= since:
-                articles.append(metadata)
+                articles.append(
+                    Article(
+                        metadata=metadata,
+                        summary=post["documents"]["abstract"],
+                    )
+                )
 
         return paginating
 
