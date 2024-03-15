@@ -5,7 +5,7 @@ from urllib.parse import ParseResult
 import logging
 from typing import List, Optional
 from bs4 import BeautifulSoup
-from industry_news.fetcher.article import ArticleMetadata
+from industry_news.article import ArticleMetadata
 from industry_news.fetcher.web_tools import get_with_retries
 from requests.models import Response
 from industry_news.utils import fail_gracefully

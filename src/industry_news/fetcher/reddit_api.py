@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, cast
 from redditwarp.SYNC import Client
 from redditwarp.models.submission import LinkPost, Submission
-from industry_news.fetcher.article import ArticleMetadata
+from industry_news.article import SOURCE, ArticleMetadata
 from industry_news.fetcher.fetcher import Fetcher
 from industry_news.utils import retry
 
@@ -64,6 +64,7 @@ class RedditApi(Fetcher):
         return ArticleMetadata(
             url=RedditApi._single_article_url(submission),
             title=submission.title,
+            source=SOURCE.REDDIT,
             publication_date=publication_date,
             score=submission.score,  # Upvotes - downvotes
             context={"subreddit": submission.subreddit.name},

@@ -1,4 +1,8 @@
+from importlib.abc import Traversable
+import importlib.resources
 import logging
+import os
+from pathlib import Path
 import random
 import time
 import yaml
@@ -9,8 +13,23 @@ T = TypeVar("T")
 RETRIES = 3
 
 
+def load_resource(resource: str) -> Path:
+    path: Traversable = importlib.resources.files("resources").joinpath(
+        resource
+    )
+    if isinstance(path, os.PathLike):
+        return Path(path)
+    else:
+        raise ValueError(f"Resource {resource} not found or not a file.")
+
+
+def load_as_string(resource: str) -> str:
+    with load_resource(resource).open("r") as file:
+        return file.read()
+
+
 def load_secrets() -> Dict[str, Any]:
-    with open("secrets.yml", "r") as file:
+    with load_resource("secrets.yml").open("r") as file:
         config: Dict[str, Any] = yaml.safe_load(file)
     return config
 
@@ -31,7 +50,7 @@ def fail_gracefully(func: Callable[..., T]) -> Optional[T]:
 def retry(
     func: Callable[..., T],
     delay_range_s: Tuple[int, int],
-    retries: int = RETRIES
+    retries: int = RETRIES,
 ) -> T:
     for _ in range(retries - 1):
         try:

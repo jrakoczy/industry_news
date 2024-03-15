@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 from requests.models import Response
 import re
 from urllib.parse import urljoin, urlparse, ParseResult
-from industry_news.fetcher.article import ArticleMetadata
+from industry_news.article import SOURCE, ArticleMetadata
 from industry_news.fetcher.fetcher import (
     CONTINUE_PAGINATING,
     Fetcher,
@@ -117,6 +117,7 @@ class HackerNewsCrawler(Fetcher):
         return ArticleMetadata(
             url=HackerNewsCrawler._single_article_url(title_span),
             title=HackerNewsCrawler._single_article_title(title_span),
+            source=SOURCE.HACKER_NEWS,
             publication_date=HackerNewsCrawler._single_article_publication_date(
                 title_row
             ),
@@ -165,7 +166,7 @@ class HackerNewsCrawler(Fetcher):
         )
         more_link: str = verify_page_element(more_link_tag["href"], str)
         return (
-            construct_url(self._site_link.geturl(), more_link)
+            urlparse(urljoin(self._site_link.geturl(), more_link))
             if more_link
             else None
         )

@@ -1,9 +1,10 @@
 from datetime import datetime
 import logging
+from re import S
 from typing import Any, List, Optional
 from urllib.parse import ParseResult, urlparse
 import requests
-from industry_news.fetcher.article import Article, ArticleMetadata
+from industry_news.article import SOURCE, Article, ArticleMetadata
 from industry_news.fetcher.fetcher import (
     CONTINUE_PAGINATING,
 )
@@ -97,6 +98,7 @@ class ResearchHubApi:
             )
             metadata = ArticleMetadata(
                 title=post["documents"]["title"],
+                source=SOURCE.RESEARCH_HUB,
                 url=ResearchHubApi._single_article_url(post),
                 publication_date=publication_date,
                 score=post["score"],

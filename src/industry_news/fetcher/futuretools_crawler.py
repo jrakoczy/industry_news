@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from typing import List
 from requests.models import Response
 from urllib.parse import urlparse, ParseResult
-from industry_news.fetcher.article import ArticleMetadata
+from industry_news.article import SOURCE, ArticleMetadata
 from industry_news.fetcher.fetcher import (
     Fetcher,
 )
@@ -54,6 +54,7 @@ class FutureToolsCrawler(Fetcher):
             articles.append(
                 ArticleMetadata(
                     title=FutureToolsCrawler._single_article_title(item),
+                    source=SOURCE.FUTURE_TOOLS,
                     url=FutureToolsCrawler._single_article_url(item),
                     publication_date=publication_date,
                     score=0,  # No scores on the site
