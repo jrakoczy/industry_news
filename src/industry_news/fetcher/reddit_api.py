@@ -1,17 +1,17 @@
 import logging
 from urllib.parse import ParseResult, urlparse
 from datetime import datetime
-from typing import List, cast
+from typing import List
 from redditwarp.SYNC import Client
 from redditwarp.models.submission import LinkPost, Submission
 from industry_news.article import SOURCE, ArticleMetadata
 from industry_news.fetcher.fetcher import Fetcher
 from industry_news.utils import retry
 
-LOGGER = logging.getLogger(__name__)
-
 
 class RedditApi(Fetcher):
+
+    _LOGGER = logging.getLogger(__name__)
 
     def __init__(
         self,
@@ -33,7 +33,7 @@ class RedditApi(Fetcher):
     def articles_metadata_wihtout_retries(
         self, since: datetime, until: datetime = datetime.now()
     ) -> List[ArticleMetadata]:
-        LOGGER.info(
+        self._LOGGER.info(
             "Fetching articles from %s between %s and %s",
             self._subreddit,
             since,
@@ -73,7 +73,7 @@ class RedditApi(Fetcher):
     @staticmethod
     def _single_article_url(submission: Submission) -> ParseResult:
         url: str = (
-            cast(LinkPost, submission).link
+            submission.link
             if isinstance(submission, LinkPost)
             else submission.permalink
         )

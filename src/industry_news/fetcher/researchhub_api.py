@@ -1,6 +1,5 @@
 from datetime import datetime
 import logging
-from re import S
 from typing import Any, List, Optional
 from urllib.parse import ParseResult, urlparse
 import requests
@@ -16,17 +15,17 @@ from industry_news.fetcher.web_tools import (
 )
 from industry_news.utils import delay_random
 
-LOGGER = logging.getLogger(__name__)
-SITE_POST_URL = "https://www.researchhub.com/paper/"
-BASE_API_URL: str = "https://backend.researchhub.com/api/"
-PAGE_LINK: ParseResult = construct_url(
-    base_url=BASE_API_URL,
-    relative_path="researchhub_unified_document/get_unified_documents/",
-    query_params={"ordering": "new", "time": "all", "type": "all"},
-)
-
 
 class ResearchHubApi:
+
+    _LOGGER = logging.getLogger(__name__)
+    _SITE_POST_URL = "https://www.researchhub.com/paper/"
+    _BASE_API_URL: str = "https://backend.researchhub.com/api/"
+    _PAGE_LINK: ParseResult = construct_url(
+        base_url=_BASE_API_URL,
+        relative_path="researchhub_unified_document/get_unified_documents/",
+        query_params={"ordering": "new", "time": "all", "type": "all"},
+    )
 
     def articles(
         self, since: datetime, until: datetime = datetime.now()
@@ -35,10 +34,12 @@ class ResearchHubApi:
         page: int = 1
         articles: List[Article] = []
         paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
-        response: requests.Response = get_with_retries(PAGE_LINK)
+        response: requests.Response = get_with_retries(self._PAGE_LINK)
 
         while paginating == CONTINUE_PAGINATING.CONTINUE:
-            LOGGER.info("Fetching articles from ResearchHub, page: %d", page)
+            self._LOGGER.info(
+                "Fetching articles from ResearchHub, page: %d", page
+            )
 
             data: Any = response.json()
             posts: List[Any] = data.get("results", [])
@@ -54,9 +55,9 @@ class ResearchHubApi:
 
         return articles
 
-    @staticmethod
-    def _fetch_page_with_delay(page: int) -> requests.Response:
-        site_link = modify_url_query(PAGE_LINK, {"page": str(page)})
+    @classmethod
+    def _fetch_page_with_delay(cls, page: int) -> requests.Response:
+        site_link = modify_url_query(cls._PAGE_LINK, {"page": str(page)})
         delay_random(DELAY_RANGE_S)
         return get_with_retries(site_link)
 
@@ -106,12 +107,12 @@ class ResearchHubApi:
 
         return metadata
 
-    @staticmethod
-    def _single_article_url(post: Any) -> ParseResult:
+    @classmethod
+    def _single_article_url(cls, post: Any) -> ParseResult:
         document: Any = post["documents"]
         if post["documents"]["pdf_copyright_allows_display"]:
             return urlparse(document["file"])
         else:
             return construct_url(
-                SITE_POST_URL, f"{document['id']}/{document['slug']}"
+                cls._SITE_POST_URL, f"{document['id']}/{document['slug']}"
             )

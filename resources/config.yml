@@ -1,0 +1,4 @@
+llm:
+  filter_model:
+    name: "gpt-4"
+    max_query_cost_usd: 0.1

@@ -5,11 +5,16 @@ from typing import Any, Callable, List, Set, Type, TypeVar
 from attr import dataclass
 from langchain.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_community.callbacks import openai_info
 from langchain_openai import OpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import tiktoken
 from industry_news.article import SOURCE, ArticleMetadata
-from industry_news.utils import load_as_string, load_resource, load_secrets
+from industry_news.utils import (
+    load_as_string,
+    load_config,
+    load_resource,
+    load_secrets,
+)
 
 
 T = TypeVar("T")
@@ -33,11 +38,15 @@ class FilterArticlesResponse(BaseModel):
     )
 
 
-def _openai(filter_model: Model) -> OpenAI:
+def _openai(filter_model_name: str) -> OpenAI:
     return OpenAI(
-        model_name=filter_model.name,
+        model_name=filter_model_name,
         openai_api_key=load_secrets()["llm"]["openai_api_key"],
+        max_tokens=-1,  # -1 == context_size - prompt length
     )
+
+
+_config = load_config()
 
 
 class ArticleFiltering:
@@ -49,23 +58,19 @@ class ArticleFiltering:
             "source_prompt": "articles from Future Tools, a site aggregating AI news"
         },
     }
+    _PROMPT_TO_COMPLETION_LEN_RATIO = 0.4
 
     # TODO move whatever you can to config
     def __init__(
         self,
+        filter_model_name: str = _config["llm"]["filter_model_name"],
+        max_query_cost_usd: Decimal = _config["llm"]["max_query_cost_usd"],
         filter_prompt_file_name: str = "prompt.txt",
-        filter_model: Model = Model(
-            name="gpt-4",
-            max_prompt_length=2048,
-            token_cost_usd=Decimal("30.0") / Decimal("1000000"),
-            max_cost_usd=Decimal("0.1"),
-            out_in_cost_ratio=Decimal("3"),
-        ),
-        openai_factory: Callable[[Model], OpenAI] = _openai,
+        openai_factory: Callable[[str], OpenAI] = _openai,
     ) -> None:
+        self._max_query_cost_usd = max_query_cost_usd
         self._filter_prompt_file_name = filter_prompt_file_name
-        self._filter_model = filter_model
-        self._openai = openai_factory(filter_model)
+        self._openai = openai_factory(filter_model_name)
         self._openai.with_structured_output(
             FilterArticlesResponse, method="json_mode"
         )
@@ -77,16 +82,43 @@ class ArticleFiltering:
             return []
 
         source: SOURCE = articles_metadata[0].source
-        numbered_chunks: List[str] = self._article_list_chunks(
-            articles_metadata, source
+        sorted_articles_metadata: List[ArticleMetadata] = self._sort_by_score(
+            articles_metadata
+        )
+        article_titles_chunks: List[str] = self._to_titles_chunks(
+            sorted_articles_metadata, source
         )
         remaining_titles: Set[str] = self._filter_titles(
-            source, numbered_chunks
+            source, article_titles_chunks
         )
+
         return [
             metadata
-            for metadata in articles_metadata
+            for metadata in sorted_articles_metadata
             if metadata.title in remaining_titles
+        ]
+
+    def _sort_by_score(
+        self, articles_metadata: List[ArticleMetadata]
+    ) -> List[ArticleMetadata]:
+        return sorted(
+            articles_metadata,
+            key=lambda metadata: metadata.score,
+            reverse=True,
+        )
+
+    def _to_titles_chunks(
+        self, article_metadata: List[ArticleMetadata], source: SOURCE
+    ) -> List[str]:
+        chunks: List[str] = _to_chunks(
+            text=ArticleFiltering._to_text(article_metadata),
+            chunk_size=self._max_chunk_token_count(source),
+            model_name=self._openai.model_name,
+        )
+        cost_limited_chunks: List[str] = self._limit_cost(chunks)
+        return [
+            ArticleFiltering._number_lines(chunk)
+            for chunk in cost_limited_chunks
         ]
 
     def _filter_titles(
@@ -113,42 +145,52 @@ class ArticleFiltering:
             type_=FilterArticlesResponse,
         )
 
-    def _article_list_chunks(
-        self, article_metadata: List[ArticleMetadata], source: SOURCE
-    ) -> List[str]:
-        chunks: List[str] = _to_chunks(
-            text=ArticleFiltering._to_text(article_metadata),
-            chunk_size=self._max_chunk_token_count(source),
-            model_name=self._filter_model.name,
-        )
-        cost_limited_chunks: List[str] = self._limit_cost(chunks)
-        return [
-            ArticleFiltering._number_lines(chunk)
-            for chunk in cost_limited_chunks
-        ]
-
     def _limit_cost(self, chunks: List[str]) -> List[str]:
         max_chunks: int = math.floor(
-            self._filter_model.max_cost_usd
-            / (
-                self._filter_model.max_prompt_length  # TODO use context lenght and calculate this value dynamically
-                #  Output tokens are more expensive:
-                * (self._filter_model.out_in_cost_ratio + 1)
-                * self._filter_model.token_cost_usd
-            )
+            self._max_query_cost_usd
+            / (self._max_prompt_cost_usd() + self._max_completion_cost_usd())
         )
 
         return chunks[:max_chunks]
 
+    def _max_prompt_cost_usd(self) -> Decimal:
+        return Decimal(
+            self._max_prompt_length()
+            * openai_info.get_openai_token_cost_for_model(
+                model_name=self._openai.model_name,
+                num_tokens=1,
+                is_completion=False,
+            )
+        )
+
+    def _max_completion_cost_usd(self) -> Decimal:
+        max_completion_len: int = (
+            self._openai.max_context_size - self._max_prompt_length()
+        )
+        return Decimal(
+            max_completion_len
+            * openai_info.get_openai_token_cost_for_model(
+                model_name=self._openai.model_name,
+                num_tokens=1,
+                is_completion=True,
+            )
+        )
+
     def _max_chunk_token_count(self, source: SOURCE) -> int:
         return int(
             (
-                self._filter_model.max_prompt_length
+                self._max_prompt_length()
                 - self._prompt_template_token_count(
                     self._filter_prompt_file_name, source
                 )
             )
             * 0.95  # Add some buffer for numbers at the beginning of each line
+        )
+
+    def _max_prompt_length(self) -> int:
+        return math.floor(
+            self._openai.max_context_size
+            * self._PROMPT_TO_COMPLETION_LEN_RATIO
         )
 
     def _to_full_prompt(self, source: SOURCE) -> PromptTemplate:
@@ -169,9 +211,8 @@ class ArticleFiltering:
     ) -> int:
         prompt_template: PromptTemplate = _prompt_template(prompt_file_name)
         n_shot_text: str = ArticleFiltering._load_n_shot_text(source)
-        return _count_tokens(
-            text=prompt_template.format(examples=n_shot_text),
-            model_name=self._filter_model.name,
+        return self._openai.get_num_tokens(
+            prompt_template.format(examples=n_shot_text)
         )
 
     @staticmethod
@@ -209,7 +250,3 @@ def _to_chunks(text: str, chunk_size: int, model_name: str) -> List[str]:
 
 def _prompt_template(prompt_file_name: str) -> PromptTemplate:
     return PromptTemplate.from_file(load_resource(prompt_file_name))
-
-
-def _count_tokens(text: str, model_name: str) -> int:
-    return len(tiktoken.encoding_for_model(model_name).encode(text))

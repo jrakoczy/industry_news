@@ -28,13 +28,21 @@ def load_as_string(resource: str) -> str:
         return file.read()
 
 
-def load_secrets() -> Dict[str, Any]:
-    with load_resource("secrets.yml").open("r") as file:
+def load_as_yml(resource: str) -> Dict[str, Any]:
+    with load_resource(resource).open("r") as file:
         config: Dict[str, Any] = yaml.safe_load(file)
     return config
 
 
-def delay_random(delay_range_s: Tuple[int, int]):
+def load_secrets() -> Dict[str, Any]:
+    return load_as_yml("secrets.yml")
+
+
+def load_config() -> Dict[str, Any]:
+    return load_as_yml("config.yml")
+
+
+def delay_random(delay_range_s: Tuple[int, int]) -> None:
     delay: float = random.uniform(delay_range_s[0], delay_range_s[1])
     time.sleep(delay)
 

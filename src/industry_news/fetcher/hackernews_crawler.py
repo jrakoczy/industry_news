@@ -16,14 +16,13 @@ from .web_tools import DELAY_RANGE_S, construct_url, get_with_retries
 from bs4.element import Tag
 
 
-LOGGER = logging.getLogger(__name__)
-BASE_URL: str = "https://news.ycombinator.com"
-SITE_LINK: ParseResult = construct_url(BASE_URL, "newest")
-
-
 class HackerNewsCrawler(Fetcher):
 
-    def __init__(self, site_link: ParseResult = SITE_LINK) -> None:
+    _LOGGER = logging.getLogger(__name__)
+    _BASE_URL: str = "https://news.ycombinator.com"
+    _SITE_LINK: ParseResult = construct_url(_BASE_URL, "newest")
+
+    def __init__(self, site_link: ParseResult = _SITE_LINK) -> None:
         super().__init__()
         self._site_link = site_link  # Possible to pass other sorting orders
 
@@ -34,7 +33,7 @@ class HackerNewsCrawler(Fetcher):
         page_link: Optional[ParseResult] = self._site_link
 
         while page_link:
-            LOGGER.info(
+            self._LOGGER.info(
                 "Fetching articles from HackerNews: %s", page_link.geturl()
             )
             response: Response = get_with_retries(url=page_link)
@@ -129,12 +128,12 @@ class HackerNewsCrawler(Fetcher):
         link_tag: Tag = verify_page_element(title_span.find("a"), Tag)
         return verify_page_element(link_tag.get_text(), str)
 
-    @staticmethod
-    def _single_article_url(title_span: Tag) -> ParseResult:
+    @classmethod
+    def _single_article_url(cls, title_span: Tag) -> ParseResult:
         link_tag: Tag = verify_page_element(title_span.find("a"), Tag)
         link: str = verify_page_element(link_tag["href"], str)
         absolute_link: str = (
-            link if link.startswith("http") else urljoin(BASE_URL, link)
+            link if link.startswith("http") else urljoin(cls._BASE_URL, link)
         )
         return urlparse(absolute_link)
 
