@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from industry_news.fetcher.hackernews_crawler import HackerNewsCrawler
 from industry_news.fetcher.researchhub_api import ResearchHubApi
 from industry_news.llm import _to_chunks
-from industry_news.utils import load_secrets
+from industry_news.config import load_secrets
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)

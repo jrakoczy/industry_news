@@ -34,14 +34,6 @@ def load_as_yml(resource: str) -> Dict[str, Any]:
     return config
 
 
-def load_secrets() -> Dict[str, Any]:
-    return load_as_yml("secrets.yml")
-
-
-def load_config() -> Dict[str, Any]:
-    return load_as_yml("config.yml")
-
-
 def delay_random(delay_range_s: Tuple[int, int]) -> None:
     delay: float = random.uniform(delay_range_s[0], delay_range_s[1])
     time.sleep(delay)

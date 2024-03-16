@@ -2,33 +2,22 @@ from decimal import Decimal
 import math
 import os
 from typing import Any, Callable, Dict, List, Set, Type, TypeVar
-from attr import dataclass
 from langchain.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_community.callbacks import openai_info
 from langchain_openai import OpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from industry_news.article import SOURCE, ArticleMetadata
+from industry_news.config import FilterModelConfig, load_config, load_secrets
 from industry_news.fetcher.web_tools import DELAY_RANGE_S
 from industry_news.utils import (
     load_as_string,
-    load_config,
     load_resource,
-    load_secrets,
     retry,
 )
 
 
 T = TypeVar("T")
-
-
-@dataclass
-class Model:
-    name: str
-    max_prompt_length: int
-    token_cost_usd: Decimal
-    max_cost_usd: Decimal
-    out_in_cost_ratio: Decimal
 
 
 class FilterArticlesResponse(BaseModel):
@@ -49,7 +38,7 @@ class ArticleFiltering:
             "source_prompt": "articles from Future Tools, a site aggregating AI news"
         },
     }
-    _config = load_config()
+    _filter_model_config: FilterModelConfig = load_config().llm.filter_model
     _openai_factory: Callable[[str], OpenAI] = (
         lambda filter_model_name: OpenAI(
             model_name=filter_model_name,
@@ -60,15 +49,13 @@ class ArticleFiltering:
 
     def __init__(
         self,
-        filter_model_name: str = _config["llm"]["filter_model"]["name"],
-        max_query_cost_usd: Decimal = _config["llm"]["filter_model"][
-            "max_query_cost_usd"
-        ],
+        filter_model_name: str = _filter_model_config.name,
+        max_query_cost_usd: Decimal = _filter_model_config.max_query_cost_usd,
         filter_prompt_file_name: str = "prompt.txt",
         openai_factory: Callable[[str], OpenAI] = _openai_factory,
-        prompt_to_completion_len_ratio: float = _config["llm"]["filter_model"][
-            "prompt_to_completion_len_ratio"
-        ],
+        prompt_to_completion_len_ratio: float = (
+            _filter_model_config.prompt_to_completion_len_ratio
+        ),
     ) -> None:
         self._filter_prompt_file_name = filter_prompt_file_name
         self._openai = openai_factory(filter_model_name)
@@ -86,7 +73,8 @@ class ArticleFiltering:
         self, articles_metadata: List[ArticleMetadata]
     ) -> List[ArticleMetadata]:
         """
-        Filters the list of articles based on criteria defined in prompt files.
+        Filters the list of articles based on criteria defined in a prompt
+        files.
 
         Returns:
             List[ArticleMetadata]: A returned list is sorted in descending
