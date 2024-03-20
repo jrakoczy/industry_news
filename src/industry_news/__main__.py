@@ -1,24 +1,22 @@
 import logging
+from re import S
 from typing import List
-from industry_news.article import Article
+from industry_news.article import Source, Article, ArticleMetadata
 from datetime import datetime, timedelta
 from industry_news.fetcher.hackernews_crawler import HackerNewsCrawler
-from industry_news.fetcher.researchhub_api import ResearchHubApi
-from industry_news.llm import _to_chunks
-from industry_news.config import load_secrets
+from industry_news.llm import ArticleFiltering
 
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
 
-def main():
+def main() -> None:
     since: datetime = datetime.now() - timedelta(hours=2)
-    results: List[Article] = HackerNewsCrawler().articles_metadata(since=since)
-
-    chunks: List[str] = _to_chunks(
-        articles_metadata=results, chunk_size=100
+    results: List[ArticleMetadata] = HackerNewsCrawler().articles_metadata(
+        since=since
     )
-    [print(f"{len(chunk)} | {chunk}") for chunk in chunks]
+    filtered = ArticleFiltering().filter_articles(results)
+    print("end")
 
 
 if __name__ == "__main__":

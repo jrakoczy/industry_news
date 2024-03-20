@@ -1,6 +1,6 @@
 Here's a numbered list of {source_prompt}:
 
-{articles}
+{articles_list}
 
 Please analyze them and leave only those that may contain promising startup ideas or significant breakthrougs in machine learning/AI. When it comes to startup ideas, focus only on those  achievable for a small (1-4 developer/-s) team where the ideas resolve around software product and services (not hardware nor manufacturing).
 Take your time to answer. Analyze each article one-by-one and provide short reasoning before classifying each entry. Reasonings should also be in a form of numbered list and should correspond to respecitve article numbers. Don't include articles titles in your answer. Just a number an reasoning.

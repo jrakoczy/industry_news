@@ -6,7 +6,7 @@ from typing import Dict, Optional
 from urllib.parse import ParseResult
 
 
-class SOURCE(Enum):
+class Source(Enum):
     REDDIT = "reddit"
     HACKER_NEWS = "hackernews"
     RESEARCH_HUB = "researchhub"
@@ -16,7 +16,7 @@ class SOURCE(Enum):
 @dataclass
 class ArticleMetadata:
     title: str
-    source: SOURCE
+    source: Source
     url: ParseResult
     publication_date: datetime
     score: int
@@ -27,6 +27,10 @@ class ArticleMetadata:
             [f"{k.capitalize()}: {v}." for k, v in self.context.items()]
         )
         return f"Title: {self.title}. {context_str}"
+
+    @staticmethod
+    def title_from_description(description: str) -> str:
+        return description.split("Title: ")[1].split(".")[0]
 
 
 @dataclass

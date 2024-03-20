@@ -1,7 +1,8 @@
 llm:
   filter_model:
-    name: "gpt-4"
-    max_query_cost_usd: 0.1
+    name: "gpt-4-1106-preview"
+    query_cost_limit_usd: 0.1
+    context_size_limit: 4096
     prompt_to_completion_len_ratio: 0.4
 web:
   user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"

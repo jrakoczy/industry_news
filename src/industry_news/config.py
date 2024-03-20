@@ -1,6 +1,6 @@
 from decimal import Decimal
+from typing import Optional
 from pydantic import BaseModel
-
 from industry_news.utils import load_as_yml
 
 # Config
@@ -8,8 +8,9 @@ from industry_news.utils import load_as_yml
 
 class FilterModelConfig(BaseModel):
     name: str
-    max_query_cost_usd: Decimal
+    query_cost_limit_usd: Decimal
     prompt_to_completion_len_ratio: float
+    context_size_limit: int
 
 
 class LLMConfig(BaseModel):
@@ -25,8 +26,14 @@ class Config(BaseModel):
     web: WebConfig
 
 
+_config: Optional[Config] = None
+
+
 def load_config() -> Config:
-    return Config(**load_as_yml("config.yml"))
+    global _config
+    if _config is None:
+        _config = Config(**load_as_yml("config.yml"))
+    return _config
 
 
 # Secrets
@@ -46,5 +53,11 @@ class Secrets(BaseModel):
     llm: LLMSecrets
 
 
+_secrets: Optional[Secrets] = None
+
+
 def load_secrets() -> Secrets:
-    return Secrets(**load_as_yml("secrets.yml"))
+    global _secrets
+    if _secrets is None:
+        _secrets = Secrets(**load_as_yml("secrets.yml"))
+    return _secrets

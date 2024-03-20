@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 from requests.models import Response
 import re
 from urllib.parse import urljoin, urlparse, ParseResult
-from industry_news.article import SOURCE, ArticleMetadata
+from industry_news.article import Source, ArticleMetadata
 from industry_news.fetcher.fetcher import (
     CONTINUE_PAGINATING,
     Fetcher,
@@ -116,7 +116,7 @@ class HackerNewsCrawler(Fetcher):
         return ArticleMetadata(
             url=HackerNewsCrawler._single_article_url(title_span),
             title=HackerNewsCrawler._single_article_title(title_span),
-            source=SOURCE.HACKER_NEWS,
+            source=Source.HACKER_NEWS,
             publication_date=HackerNewsCrawler._single_article_publication_date(
                 title_row
             ),
