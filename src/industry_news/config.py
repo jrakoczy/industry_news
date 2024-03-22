@@ -1,9 +1,16 @@
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 from industry_news.utils import load_as_yml
 
 # Config
+
+
+class SummaryModelConfig(BaseModel):
+    name: str
+    query_cost_limit_usd: Decimal
+    context_size_limit: int
+    cost_per_1k_characters_usd: Decimal
 
 
 class FilterModelConfig(BaseModel):
@@ -15,6 +22,7 @@ class FilterModelConfig(BaseModel):
 
 class LLMConfig(BaseModel):
     filter_model: FilterModelConfig
+    summary_model: SummaryModelConfig
 
 
 class WebConfig(BaseModel):
@@ -40,7 +48,8 @@ def load_config() -> Config:
 
 
 class LLMSecrets(BaseModel):
-    openai_api_key: str
+    openai_api_key: SecretStr
+    google_api_key: SecretStr
 
 
 class RedditSecrets(BaseModel):

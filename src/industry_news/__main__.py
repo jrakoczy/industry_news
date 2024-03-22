@@ -1,7 +1,6 @@
 import logging
-from re import S
 from typing import List
-from industry_news.article import Source, Article, ArticleMetadata
+from industry_news.article import ArticleMetadata
 from datetime import datetime, timedelta
 from industry_news.fetcher.hackernews_crawler import HackerNewsCrawler
 from industry_news.llm import ArticleFiltering

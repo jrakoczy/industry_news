@@ -1,17 +1,35 @@
+from ast import Call
 from decimal import Decimal
-from functools import lru_cache
+from functools import lru_cache, wraps
 import logging
 import math
 import os
-from typing import Any, Callable, Dict, List, Optional, Set, Type, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Set,
+    Type,
+    TypeVar,
+)
 from langchain.prompts import PromptTemplate
+from langchain_core.runnables import RunnableSerializable
 from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain_community.callbacks import openai_info
+from langchain_community.callbacks import openai_info, manager
+from langchain_google_genai import GoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_openai.llms.base import BaseOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from industry_news.article import Source, ArticleMetadata
-from industry_news.config import FilterModelConfig, load_config, load_secrets
+from industry_news.config import (
+    FilterModelConfig,
+    SummaryModelConfig,
+    load_config,
+    load_secrets,
+)
 from industry_news.fetcher.web_tools import DELAY_RANGE_S
 from industry_news.utils import (
     load_as_string,
@@ -20,6 +38,7 @@ from industry_news.utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+_PROMPT_DIR = "prompts"
 T = TypeVar("T")
 
 
@@ -30,6 +49,43 @@ class FilterArticlesResponse(BaseModel):
     relevant_articles: List[int] = Field(
         description="Line numbers of relevant articles",
     )
+
+
+class TextSummarization:
+
+    _GOOGLE_AI_FACTORY: Callable[[str], GoogleGenerativeAI] = (
+        lambda model_name: GoogleGenerativeAI(
+            model=model_name, google_api_key=load_secrets().llm.google_api_key
+        )
+    )
+
+    def __init__(
+        self,
+        summary_prompt_file_name: str,
+        config: SummaryModelConfig = load_config().llm.summary_model,
+        google_ai_factory: Callable[
+            [str], GoogleGenerativeAI
+        ] = _GOOGLE_AI_FACTORY,
+    ) -> None:
+        self._summary_prompt_file_name = summary_prompt_file_name
+        self._model = _prompt_template(
+            summary_prompt_file_name
+        ) | google_ai_factory(config.name)
+
+    def summarize(
+        self, text_generator: Generator[str, None, None]
+    ) -> List[str]:
+        """
+        Args:
+            text_generator: Use generator to defer loading text logic to a
+            method's caller and to avoid loading all text into memory at once.
+        """
+        summaries: List[str] = []
+
+        for text in text_generator:
+            summaries.append(self._model.invoke({"text": text}))
+
+        return summaries
 
 
 class ArticleFiltering:
@@ -45,7 +101,7 @@ class ArticleFiltering:
     }
 
     # We need to use ChatOpenAI instead of OpenAI to have structured output.
-    _openai_factory: Callable[[str], ChatOpenAI] = (
+    _OPENAI_FACTORY: Callable[[str], ChatOpenAI] = (
         lambda model_name: ChatOpenAI(
             model_name=model_name,
             openai_api_key=load_secrets().llm.openai_api_key,
@@ -55,20 +111,21 @@ class ArticleFiltering:
     def __init__(
         self,
         config: FilterModelConfig = load_config().llm.filter_model,
-        filter_prompt_file_name: str = "prompt.txt",
-        openai_factory: Callable[[str], ChatOpenAI] = _openai_factory,
+        filter_prompt_file_name: str = f"{_PROMPT_DIR}/prompt.txt",
+        openai_factory: Callable[[str], ChatOpenAI] = _OPENAI_FACTORY,
     ) -> None:
         openai_model: ChatOpenAI = openai_factory(config.name)
 
         self._filter_prompt_file_name = filter_prompt_file_name
         self._model_name = openai_model.model_name
-        self._model = openai_model.with_structured_output(
+        self._model = _prompt_template(
+            filter_prompt_file_name
+        ) | openai_model.with_structured_output(
             FilterArticlesResponse, method="json_mode"
         )
         self._query_cost_limit_usd = config.query_cost_limit_usd
         self._cost_calculator = OpenAICostCalculator(
             openai=openai_model,
-            filter_prompt_file_name=filter_prompt_file_name,
             prompt_to_completion_len_ratio=(
                 config.prompt_to_completion_len_ratio
             ),
@@ -137,6 +194,22 @@ class ArticleFiltering:
             for chunk in cost_limited_chunks
         ]
 
+    @staticmethod
+    def _with_openai_cost_logged(
+        func: Callable[..., Any]
+    ) -> Callable[..., Any]:
+        @wraps(func)
+        def wrapper(
+            self: Any, *args: List[Any], **kwargs: Dict[Any, Any]
+        ) -> Any:
+            with manager.get_openai_callback() as openai_callback:
+                result = func(self, *args, **kwargs)
+                _LOGGER.info(openai_callback)
+            return result
+
+        return wrapper
+
+    @_with_openai_cost_logged
     def _filter_titles_by_prompt(
         self, source: Source, numbered_chunks: List[str]
     ) -> Set[str]:
@@ -155,16 +228,15 @@ class ArticleFiltering:
         return remaining_titles
 
     def _invoke_model(
-        self, source: Source, articles_chunk: str
+        self,
+        source: Source,
+        articles_chunk: str,
     ) -> FilterArticlesResponse:
-        prompt: PromptTemplate = _prompt_template(
-            self._filter_prompt_file_name
-        )
         prompt_variables: Dict[str, str] = ArticleFiltering._prompt_variables(
             source, articles_chunk
         )
         output: Any = retry(
-            lambda: (prompt | self._model).invoke(prompt_variables),
+            lambda: self._model.invoke(prompt_variables),
             delay_range_s=DELAY_RANGE_S,
         )
         return _verify_output(output=output, type_=FilterArticlesResponse)
@@ -234,14 +306,15 @@ class ArticleFiltering:
 
     @staticmethod
     def _load_n_shot_text(source: Source) -> str:
-        return load_as_string(f"n_shot/{source.value}_n_shot.txt")
+        return load_as_string(
+            f"{_PROMPT_DIR}/n_shot/{source.value}_n_shot.txt"
+        )
 
 
 class OpenAICostCalculator:
     def __init__(
         self,
         openai: ChatOpenAI,
-        filter_prompt_file_name: str,
         prompt_to_completion_len_ratio: float,
         context_size_limit: Optional[int] = None,
     ) -> None:
