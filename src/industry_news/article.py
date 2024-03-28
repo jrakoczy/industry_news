@@ -21,6 +21,7 @@ class ArticleMetadata:
     publication_date: datetime
     score: int
     context: Dict[str, str] = field(default_factory=lambda: defaultdict(str))
+    why_is_relevant: Optional[str] = None
 
     def description(self) -> str:
         context_str: str = " ".join(
@@ -36,5 +37,5 @@ class ArticleMetadata:
 @dataclass
 class Article:
     metadata: ArticleMetadata
+    summary: str
     content: Optional[str] = None
-    summary: Optional[str] = None

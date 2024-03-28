@@ -1,4 +1,4 @@
-from ast import Call
+from curses import meta
 from decimal import Decimal
 from functools import lru_cache, wraps
 import logging
@@ -16,10 +16,9 @@ from typing import (
     TypeVar,
 )
 from langchain.prompts import PromptTemplate
-from langchain_core.runnables import RunnableSerializable
 from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_community.callbacks import openai_info, manager
-from langchain_google_genai import GoogleGenerativeAI
+from langchain_google_vertexai import VertexAI
 from langchain_openai import ChatOpenAI
 from langchain_openai.llms.base import BaseOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -39,6 +38,7 @@ from industry_news.utils import (
 
 _LOGGER = logging.getLogger(__name__)
 _PROMPT_DIR = "prompts"
+_NUM_OF_DIFFERENT_MODELS = 2
 T = TypeVar("T")
 
 
@@ -53,24 +53,28 @@ class FilterArticlesResponse(BaseModel):
 
 class TextSummarization:
 
-    _GOOGLE_AI_FACTORY: Callable[[str], GoogleGenerativeAI] = (
-        lambda model_name: GoogleGenerativeAI(
-            model=model_name, google_api_key=load_secrets().llm.google_api_key
+    @staticmethod
+    def _vertex_ai_factory(model_name: str) -> VertexAI:
+        service_account_key = "GOOGLE_APPLICATION_CREDENTIALS"
+        
+        os.environ[service_account_key] = str(
+            load_secrets().llm.service_account_file_path
         )
-    )
+        vertex_ai = VertexAI(model=model_name)
+        os.environ.pop(service_account_key)
+        
+        return vertex_ai
 
     def __init__(
         self,
-        summary_prompt_file_name: str,
+        summary_prompt_file_name: str = f"{_PROMPT_DIR}/summarize_prompt.txt",
         config: SummaryModelConfig = load_config().llm.summary_model,
-        google_ai_factory: Callable[
-            [str], GoogleGenerativeAI
-        ] = _GOOGLE_AI_FACTORY,
+        vertex_ai_factory: Callable[[str], VertexAI] = _vertex_ai_factory,
     ) -> None:
         self._summary_prompt_file_name = summary_prompt_file_name
         self._model = _prompt_template(
             summary_prompt_file_name
-        ) | google_ai_factory(config.name)
+        ) | vertex_ai_factory(config.name)
 
     def summarize(
         self, text_generator: Generator[str, None, None]
@@ -104,14 +108,14 @@ class ArticleFiltering:
     _OPENAI_FACTORY: Callable[[str], ChatOpenAI] = (
         lambda model_name: ChatOpenAI(
             model_name=model_name,
-            openai_api_key=load_secrets().llm.openai_api_key,
+            openai_api_key=load_secrets().llm.openai_api_key.get_secret_value(),
         )
     )
 
     def __init__(
         self,
         config: FilterModelConfig = load_config().llm.filter_model,
-        filter_prompt_file_name: str = f"{_PROMPT_DIR}/prompt.txt",
+        filter_prompt_file_name: str = f"{_PROMPT_DIR}/filter_prompt.txt",
         openai_factory: Callable[[str], ChatOpenAI] = _OPENAI_FACTORY,
     ) -> None:
         openai_model: ChatOpenAI = openai_factory(config.name)
@@ -158,15 +162,13 @@ class ArticleFiltering:
         article_titles_chunks: List[str] = self._titles_to_chunks(
             sorted_articles_metadata, source
         )
-        remaining_titles: Set[str] = self._filter_titles_by_prompt(
+        remaining_titles: Dict[str, str] = self._filter_titles_by_prompt(
             source, article_titles_chunks
         )
 
-        return [
-            metadata
-            for metadata in sorted_articles_metadata
-            if metadata.title in remaining_titles
-        ]
+        return ArticleFiltering._filter_metadata_adding_reasons(
+            sorted_articles_metadata, remaining_titles
+        )
 
     def _sort_by_score(
         self, articles_metadata: List[ArticleMetadata]
@@ -212,20 +214,22 @@ class ArticleFiltering:
     @_with_openai_cost_logged
     def _filter_titles_by_prompt(
         self, source: Source, numbered_chunks: List[str]
-    ) -> Set[str]:
-        remaining_titles: Set[str] = set()
+    ) -> Dict[str, str]:
+        """
+        Returns:
+            Dict[str, str]: [Title, Reason why an article was selected]
+        """
+        remaining_titles_dict: Dict[str, str] = dict()
 
         for articles_chunk in numbered_chunks:
             response: FilterArticlesResponse = self._invoke_model(
                 source, articles_chunk
             )
-            remaining_titles.update(
-                self._filter_titles_chunk(
-                    articles_chunk, response.relevant_articles
-                )
+            remaining_titles_dict.update(
+                self._filter_titles_chunk(articles_chunk, response)
             )
 
-        return remaining_titles
+        return remaining_titles_dict
 
     def _invoke_model(
         self,
@@ -243,13 +247,15 @@ class ArticleFiltering:
 
     @staticmethod
     def _filter_titles_chunk(
-        articles_titles_chunk: str, line_numbers: List[int]
-    ) -> List[str]:
-        return [
-            ArticleMetadata.title_from_description(line)
+        articles_titles_chunk: str, model_response: FilterArticlesResponse
+    ) -> Dict[str, str]:
+        return {
+            ArticleMetadata.title_from_description(
+                line
+            ): model_response.reasonings[i]
             for i, line in enumerate(articles_titles_chunk.split(os.linesep))
-            if i + 1 in line_numbers
-        ]
+            if i + 1 in model_response.relevant_articles
+        }
 
     def _titles_chunk_max_token_count(self, source: Source) -> int:
         prompt_variables: Dict[str, str] = ArticleFiltering._prompt_variables(
@@ -304,11 +310,28 @@ class ArticleFiltering:
             [f"{i+1}. {line}" for i, line in enumerate(text.split(os.linesep))]
         )
 
+    @lru_cache
     @staticmethod
     def _load_n_shot_text(source: Source) -> str:
         return load_as_string(
             f"{_PROMPT_DIR}/n_shot/{source.value}_n_shot.txt"
         )
+
+    @staticmethod
+    def _filter_metadata_adding_reasons(
+        sorted_articles_metadata: List[ArticleMetadata],
+        remaining_titles_dict: Dict[str, str],
+    ) -> List[ArticleMetadata]:
+        remaining_metadata: List[ArticleMetadata] = []
+
+        for metadata in sorted_articles_metadata:
+            if metadata.title in remaining_titles_dict.keys():
+                metadata.why_is_relevant = remaining_titles_dict[
+                    metadata.title
+                ]
+                remaining_metadata.append(metadata)
+
+        return remaining_metadata
 
 
 class OpenAICostCalculator:
@@ -414,5 +437,6 @@ def _to_chunks(text: str, chunk_size: int, model_name: str) -> List[str]:
     return splitter.split_text(text)
 
 
+@lru_cache(maxsize=_NUM_OF_DIFFERENT_MODELS)
 def _prompt_template(prompt_file_name: str) -> PromptTemplate:
     return PromptTemplate.from_file(load_resource(prompt_file_name))

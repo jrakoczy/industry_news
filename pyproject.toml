@@ -62,6 +62,7 @@ langchain-text-splitters = "^0.0.1"
 tiktoken = "^0.6.0"
 langchain-openai = "^0.0.8"
 langchain-google-genai = "^0.0.11"
+langchain-google-vertexai = "^0.1.1"
 
 
 [build-system]

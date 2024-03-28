@@ -1,6 +1,9 @@
 from decimal import Decimal
+from functools import lru_cache
+from pathlib import Path
 from typing import Optional
 from pydantic import BaseModel, SecretStr
+from google.oauth2 import service_account, id_token
 from industry_news.utils import load_as_yml
 
 # Config
@@ -9,7 +12,6 @@ from industry_news.utils import load_as_yml
 class SummaryModelConfig(BaseModel):
     name: str
     query_cost_limit_usd: Decimal
-    context_size_limit: int
     cost_per_1k_characters_usd: Decimal
 
 
@@ -49,7 +51,7 @@ def load_config() -> Config:
 
 class LLMSecrets(BaseModel):
     openai_api_key: SecretStr
-    google_api_key: SecretStr
+    service_account_file_path: Path
 
 
 class RedditSecrets(BaseModel):
