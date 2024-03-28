@@ -56,13 +56,13 @@ class TextSummarization:
     @staticmethod
     def _vertex_ai_factory(model_name: str) -> VertexAI:
         service_account_key = "GOOGLE_APPLICATION_CREDENTIALS"
-        
+
         os.environ[service_account_key] = str(
             load_secrets().llm.service_account_file_path
         )
         vertex_ai = VertexAI(model=model_name)
         os.environ.pop(service_account_key)
-        
+
         return vertex_ai
 
     def __init__(
@@ -72,6 +72,7 @@ class TextSummarization:
         vertex_ai_factory: Callable[[str], VertexAI] = _vertex_ai_factory,
     ) -> None:
         self._summary_prompt_file_name = summary_prompt_file_name
+        self._config = config
         self._model = _prompt_template(
             summary_prompt_file_name
         ) | vertex_ai_factory(config.name)
@@ -85,11 +86,39 @@ class TextSummarization:
             method's caller and to avoid loading all text into memory at once.
         """
         summaries: List[str] = []
+        total_cost_usd: Decimal = Decimal(0)
 
         for text in text_generator:
+
+            total_cost_usd += self._text_cost(text)
+            if total_cost_usd > self._config.query_cost_limit_usd:
+                break
+
             summaries.append(self._model.invoke({"text": text}))
 
+        _LOGGER.info(
+            "Est. total cost of summarization: %.3f USD.",
+            float(total_cost_usd),
+        )
         return summaries
+
+    def _text_cost(self, text: str) -> Decimal:
+        completion_to_prompt_len_ratio = Decimal(
+            1.0 / self._config.prompt_to_completion_len_ratio
+        )
+        prompt_cost_usd: Decimal = (
+            Decimal(len(text) + self._prompt_char_len())
+            / Decimal(1000)
+            * self._config.cost_per_1k_characters_usd
+        )
+
+        return (
+            prompt_cost_usd + prompt_cost_usd * completion_to_prompt_len_ratio
+        )
+
+    @lru_cache
+    def _prompt_char_len(self) -> int:
+        return len(load_as_string(self._summary_prompt_file_name))
 
 
 class ArticleFiltering:

@@ -3,7 +3,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 from pydantic import BaseModel, SecretStr
-from google.oauth2 import service_account, id_token
 from industry_news.utils import load_as_yml
 
 # Config
@@ -13,6 +12,7 @@ class SummaryModelConfig(BaseModel):
     name: str
     query_cost_limit_usd: Decimal
     cost_per_1k_characters_usd: Decimal
+    prompt_to_completion_len_ratio: float
 
 
 class FilterModelConfig(BaseModel):
