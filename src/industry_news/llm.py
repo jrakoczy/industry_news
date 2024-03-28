@@ -86,22 +86,28 @@ class TextSummarization:
         total_cost_usd: Decimal = Decimal(0)
 
         for text in text_generator:
-
             total_cost_usd += self._text_cost(text)
             if total_cost_usd > self._config.query_cost_limit_usd:
                 break
-            
-            summary: str = retry(
-                lambda: self._model.invoke({"text": text}),
-                delay_range_s=(2, 2),
-            )
+
+            summary: str = self._invoke_model(text)
             summaries.append(summary)
 
+        self._log_total_cost(total_cost_usd)
+        return summaries
+
+    def _invoke_model(self, text: str) -> str:
+        output: Any = retry(
+            lambda: self._model.invoke({"text": text}),
+            delay_range_s=(2, 2),
+        )
+        return _verify_output(output=output, type_=str)
+
+    def _log_total_cost(self, total_cost_usd: Decimal) -> None:
         _LOGGER.info(
             "Est. total cost of summarization: %.3f USD.",
             float(total_cost_usd),
         )
-        return summaries
 
     def _text_cost(self, text: str) -> Decimal:
         completion_to_prompt_len_ratio = Decimal(
