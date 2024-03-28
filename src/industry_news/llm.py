@@ -1,4 +1,3 @@
-from curses import meta
 from decimal import Decimal
 from functools import lru_cache, wraps
 import logging
@@ -11,7 +10,6 @@ from typing import (
     Generator,
     List,
     Optional,
-    Set,
     Type,
     TypeVar,
 )
@@ -29,7 +27,6 @@ from industry_news.config import (
     load_config,
     load_secrets,
 )
-from industry_news.fetcher.web_tools import DELAY_RANGE_S
 from industry_news.utils import (
     load_as_string,
     load_resource,
@@ -93,8 +90,12 @@ class TextSummarization:
             total_cost_usd += self._text_cost(text)
             if total_cost_usd > self._config.query_cost_limit_usd:
                 break
-
-            summaries.append(self._model.invoke({"text": text}))
+            
+            summary: str = retry(
+                lambda: self._model.invoke({"text": text}),
+                delay_range_s=(2, 2),
+            )
+            summaries.append(summary)
 
         _LOGGER.info(
             "Est. total cost of summarization: %.3f USD.",
@@ -108,7 +109,7 @@ class TextSummarization:
         )
         prompt_cost_usd: Decimal = (
             Decimal(len(text) + self._prompt_char_len())
-            / Decimal(1000)
+            / Decimal(1000)  # Cost is per 1k chars
             * self._config.cost_per_1k_characters_usd
         )
 
@@ -269,8 +270,7 @@ class ArticleFiltering:
             source, articles_chunk
         )
         output: Any = retry(
-            lambda: self._model.invoke(prompt_variables),
-            delay_range_s=DELAY_RANGE_S,
+            lambda: self._model.invoke(prompt_variables), delay_range_s=(2, 2)
         )
         return _verify_output(output=output, type_=FilterArticlesResponse)
 
