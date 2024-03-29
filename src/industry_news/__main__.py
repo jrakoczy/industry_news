@@ -1,10 +1,10 @@
 import logging
 from typing import List
-from industry_news.article import ArticleMetadata
+from industry_news.digest.article import ArticleMetadata
 from datetime import datetime, timedelta
 from industry_news.config import load_secrets
-from industry_news.fetcher.hackernews_crawler import HackerNewsCrawler
-from industry_news.llm import ArticleFiltering, TextSummarization
+from industry_news.fetcher.hackernews_scraper import HackerNewsScraper
+from industry_news.llm import ArticleFiltering, TextSummarizer
 
 
 logging.basicConfig(level=logging.INFO)
@@ -18,7 +18,7 @@ def main() -> None:
     # )
     # filtered = ArticleFiltering().filter_articles(results)
 
-    summaries = TextSummarization().summarize(
+    summaries = TextSummarizer().summarize(
         (
             "This is a very long test article."
             "With basically no meaningful content."

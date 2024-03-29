@@ -4,20 +4,25 @@ from bs4 import BeautifulSoup
 from typing import List
 from requests.models import Response
 from urllib.parse import urlparse, ParseResult
-from industry_news.article import Source, ArticleMetadata
+from industry_news.digest.article import ArticleMetadata
 from industry_news.fetcher.fetcher import (
-    Fetcher,
+    MetadataFetcher,
+    Source,
 )
 from industry_news.fetcher.web_tools import verify_page_element
 from .web_tools import construct_url, get_with_retries
 from bs4.element import Tag
 
 
-class FutureToolsCrawler(Fetcher):
+class FutureToolsScraper(MetadataFetcher):
 
     _LOGGER = logging.getLogger(__name__)
     _BASE_URL: str = "https://www.futuretools.io"
     _SITE_LINK: ParseResult = construct_url(_BASE_URL, "news")
+
+    def __init__(self, site_link: ParseResult = _SITE_LINK) -> None:
+        super().__init__()
+        self._site_link = site_link
 
     def articles_metadata(
         self, since: datetime, until: datetime = datetime.now()
@@ -27,9 +32,9 @@ class FutureToolsCrawler(Fetcher):
             since,
             until,
         )
-        response: Response = get_with_retries(url=self._SITE_LINK)
+        response: Response = get_with_retries(url=self._site_link)
         soup: BeautifulSoup = BeautifulSoup(response.content, "html.parser")
-        return FutureToolsCrawler._articles_from_page(
+        return FutureToolsScraper._articles_from_page(
             soup=soup, since=since, until=until
         )
 
@@ -43,7 +48,7 @@ class FutureToolsCrawler(Fetcher):
 
         for item in list_items:
             publication_date: datetime = (
-                FutureToolsCrawler._single_article_publication_date(item)
+                FutureToolsScraper._single_article_publication_date(item)
             )
 
             if publication_date > until:
@@ -53,9 +58,9 @@ class FutureToolsCrawler(Fetcher):
 
             articles.append(
                 ArticleMetadata(
-                    title=FutureToolsCrawler._single_article_title(item),
+                    title=FutureToolsScraper._single_article_title(item),
                     source=Source.FUTURE_TOOLS,
-                    url=FutureToolsCrawler._single_article_url(item),
+                    url=FutureToolsScraper._single_article_url(item),
                     publication_date=publication_date,
                     score=0,  # No scores on the site
                 )

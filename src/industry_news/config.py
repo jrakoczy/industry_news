@@ -1,8 +1,9 @@
 from decimal import Decimal
-from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
+from unittest.mock import Base
 from pydantic import BaseModel, SecretStr
+from industry_news.fetcher.fetcher import Source
 from industry_news.utils import load_as_yml
 
 # Config
@@ -31,9 +32,20 @@ class WebConfig(BaseModel):
     user_agent: str
 
 
+class SingleSourceConfig(BaseModel):
+    name: Source
+    subspaces: List[str]
+
+
+class SourcesConfig(BaseModel):
+    with_summary: List[SingleSourceConfig]
+    without_summary: List[SingleSourceConfig]
+
+
 class Config(BaseModel):
     llm: LLMConfig
     web: WebConfig
+    sources: SourcesConfig
 
 
 _config: Optional[Config] = None
@@ -56,7 +68,7 @@ class LLMSecrets(BaseModel):
 
 class RedditSecrets(BaseModel):
     client_id: str
-    client_secret: str
+    client_secret: SecretStr
 
 
 class Secrets(BaseModel):

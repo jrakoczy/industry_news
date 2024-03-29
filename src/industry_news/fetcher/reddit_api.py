@@ -4,23 +4,29 @@ from datetime import datetime
 from typing import List
 from redditwarp.SYNC import Client
 from redditwarp.models.submission import LinkPost, Submission
-from industry_news.article import Source, ArticleMetadata
-from industry_news.fetcher.fetcher import Fetcher
+from industry_news.digest.article import ArticleMetadata
+from industry_news.config import Secrets, load_secrets
+from industry_news.fetcher.fetcher import MetadataFetcher, Source
 from industry_news.utils import retry
 
 
-class RedditApi(Fetcher):
+class RedditApi(MetadataFetcher):
 
     _LOGGER = logging.getLogger(__name__)
 
-    def __init__(
-        self,
-        client_id: str,
-        client_secret: str,
-        subreddit: str,
-    ):
-        self._reddit: Client = Client(client_id, client_secret)
-        self._subreddit: str = subreddit
+    @staticmethod
+    def _reddit_client() -> Client:
+        secrets: Secrets = load_secrets()
+        return Client(
+            client_id=secrets.reddit.client_id,
+            client_secret=secrets.reddit.client_secret.get_secret_value(),
+        )
+
+    def __init__(self, subreddit: str, reddit: Client = _reddit_client()):
+        if not subreddit:
+            raise ValueError("Subreddit cannot be blank.")
+        self._reddit = reddit
+        self._subreddit = subreddit
 
     def articles_metadata(
         self, since: datetime, until: datetime = datetime.now()

@@ -31,6 +31,10 @@ def construct_url(
     return urlparse(url.url)
 
 
+def base_url_str(url: ParseResult) -> str:
+    return furl(url).origin
+
+
 def verify_page_element(element: Optional[T], type_: Type[R]) -> R:
     if not isinstance(element, type_):
         raise ValueError("Invalid page element.")

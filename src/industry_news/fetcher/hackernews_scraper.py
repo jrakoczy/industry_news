@@ -5,22 +5,22 @@ from typing import List, Optional, Tuple
 from requests.models import Response
 import re
 from urllib.parse import urljoin, urlparse, ParseResult
-from industry_news.article import Source, ArticleMetadata
+from industry_news.digest.article import ArticleMetadata
 from industry_news.fetcher.fetcher import (
     CONTINUE_PAGINATING,
-    Fetcher,
+    MetadataFetcher,
+    Source,
 )
 from industry_news.fetcher.web_tools import verify_page_element
 from industry_news.utils import delay_random
-from .web_tools import DELAY_RANGE_S, construct_url, get_with_retries
+from .web_tools import DELAY_RANGE_S, base_url_str, get_with_retries
 from bs4.element import Tag
 
 
-class HackerNewsCrawler(Fetcher):
+class HackerNewsScraper(MetadataFetcher):
 
     _LOGGER = logging.getLogger(__name__)
-    _BASE_URL: str = "https://news.ycombinator.com"
-    _SITE_LINK: ParseResult = construct_url(_BASE_URL, "newest")
+    _SITE_LINK: ParseResult = urlparse("https://news.ycombinator.com/newest")
 
     def __init__(self, site_link: ParseResult = _SITE_LINK) -> None:
         super().__init__()
@@ -43,10 +43,8 @@ class HackerNewsCrawler(Fetcher):
             retrieved_metadata: List[ArticleMetadata]
             paginating: CONTINUE_PAGINATING
 
-            retrieved_metadata, paginating = (
-                HackerNewsCrawler._extract_articles_from_page(
-                    soup=soup, since=since, until=until
-                )
+            retrieved_metadata, paginating = self._extract_articles_from_page(
+                soup=soup, since=since, until=until
             )
 
             articles_metadata.extend(retrieved_metadata)
@@ -59,9 +57,8 @@ class HackerNewsCrawler(Fetcher):
 
         return articles_metadata
 
-    @staticmethod
     def _extract_articles_from_page(
-        soup: BeautifulSoup, since: datetime, until: datetime
+        self, soup: BeautifulSoup, since: datetime, until: datetime
     ) -> Tuple[List[ArticleMetadata], CONTINUE_PAGINATING]:
         urls: List[ArticleMetadata] = []
         paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
@@ -74,7 +71,7 @@ class HackerNewsCrawler(Fetcher):
 
             if title_span:
                 if (
-                    HackerNewsCrawler._process_title_row(
+                    self._process_title_row(
                         title_span=title_span,
                         title_row=title_row,
                         urls=urls,
@@ -87,18 +84,16 @@ class HackerNewsCrawler(Fetcher):
 
         return urls, paginating
 
-    @staticmethod
     def _process_title_row(
+        self,
         title_span: Tag,
         title_row: Tag,
         urls: List[ArticleMetadata],
         since: datetime,
         until: datetime,
     ) -> CONTINUE_PAGINATING:
-        article_metadata: ArticleMetadata = (
-            HackerNewsCrawler._single_article_metadata(
-                title_span=title_span, title_row=title_row
-            )
+        article_metadata: ArticleMetadata = self._single_article_metadata(
+            title_span=title_span, title_row=title_row
         )
 
         if article_metadata.publication_date > until:
@@ -109,18 +104,17 @@ class HackerNewsCrawler(Fetcher):
         else:
             return CONTINUE_PAGINATING.STOP
 
-    @staticmethod
     def _single_article_metadata(
-        title_span: Tag, title_row: Tag
+        self, title_span: Tag, title_row: Tag
     ) -> ArticleMetadata:
         return ArticleMetadata(
-            url=HackerNewsCrawler._single_article_url(title_span),
-            title=HackerNewsCrawler._single_article_title(title_span),
+            url=self._single_article_url(title_span),
+            title=HackerNewsScraper._single_article_title(title_span),
             source=Source.HACKER_NEWS,
-            publication_date=HackerNewsCrawler._single_article_publication_date(
+            publication_date=HackerNewsScraper._single_article_publication_date(
                 title_row
             ),
-            score=HackerNewsCrawler._single_article_score(title_row),
+            score=HackerNewsScraper._single_article_score(title_row),
         )
 
     @staticmethod
@@ -128,24 +122,25 @@ class HackerNewsCrawler(Fetcher):
         link_tag: Tag = verify_page_element(title_span.find("a"), Tag)
         return verify_page_element(link_tag.get_text(), str)
 
-    @classmethod
-    def _single_article_url(cls, title_span: Tag) -> ParseResult:
+    def _single_article_url(self, title_span: Tag) -> ParseResult:
         link_tag: Tag = verify_page_element(title_span.find("a"), Tag)
-        link: str = verify_page_element(link_tag["href"], str)
+        article_link: str = verify_page_element(link_tag["href"], str)
         absolute_link: str = (
-            link if link.startswith("http") else urljoin(cls._BASE_URL, link)
+            article_link
+            if article_link.startswith("http")
+            else urljoin(base_url_str(self._site_link), article_link)
         )
         return urlparse(absolute_link)
 
     @staticmethod
     def _single_article_publication_date(row: Tag) -> datetime:
-        date_span: Tag = HackerNewsCrawler._span_from_next_row(row, "age")
+        date_span: Tag = HackerNewsScraper._span_from_next_row(row, "age")
         publication_date: str = verify_page_element(date_span["title"], str)
         return datetime.strptime(publication_date, "%Y-%m-%dT%H:%M:%S")
 
     @staticmethod
     def _single_article_score(row: Tag) -> int:
-        score_span: Tag = HackerNewsCrawler._span_from_next_row(row, "score")
+        score_span: Tag = HackerNewsScraper._span_from_next_row(row, "score")
         score: str = verify_page_element(score_span.get_text(), str)
         match = re.search(r"\d+", score)
 

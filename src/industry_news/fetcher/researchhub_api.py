@@ -3,9 +3,11 @@ import logging
 from typing import Any, List, Optional
 from urllib.parse import ParseResult, urlparse
 import requests
-from industry_news.article import Source, Article, ArticleMetadata
+from industry_news.digest.article import ArticleSummary, ArticleMetadata
 from industry_news.fetcher.fetcher import (
     CONTINUE_PAGINATING,
+    Source,
+    SummaryFetcher,
 )
 from industry_news.fetcher.web_tools import (
     DELAY_RANGE_S,
@@ -16,25 +18,35 @@ from industry_news.fetcher.web_tools import (
 from industry_news.utils import delay_random
 
 
-class ResearchHubApi:
+class ResearchHubApi(SummaryFetcher):
 
     _LOGGER = logging.getLogger(__name__)
-    _SITE_POST_URL = "https://www.researchhub.com/paper/"
+    _SITE_POST_URL: ParseResult = urlparse(
+        "https://www.researchhub.com/paper/"
+    )
     _BASE_API_URL: str = "https://backend.researchhub.com/api/"
-    _PAGE_LINK: ParseResult = construct_url(
+    _SITE_LINK: ParseResult = construct_url(
         base_url=_BASE_API_URL,
         relative_path="researchhub_unified_document/get_unified_documents/",
         query_params={"ordering": "new", "time": "all", "type": "all"},
     )
 
-    def articles(
+    def __init__(
+        self,
+        site_post_url: ParseResult = _SITE_POST_URL,
+        site_link: ParseResult = _SITE_LINK,
+    ) -> None:
+        self._site_post_url = site_post_url
+        self._site_link = site_link
+
+    def article_summaries(
         self, since: datetime, until: datetime = datetime.now()
-    ) -> List[Article]:
+    ) -> List[ArticleSummary]:
 
         page: int = 1
-        articles: List[Article] = []
+        articles: List[ArticleSummary] = []
         paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
-        response: requests.Response = get_with_retries(self._PAGE_LINK)
+        response: requests.Response = get_with_retries(self._site_link)
 
         while paginating == CONTINUE_PAGINATING.CONTINUE:
             self._LOGGER.info(
@@ -44,33 +56,32 @@ class ResearchHubApi:
             data: Any = response.json()
             posts: List[Any] = data.get("results", [])
 
-            paginating = ResearchHubApi._process_results_page(
+            paginating = self._process_results_page(
                 since, until, articles, posts
             )
 
             page += 1
-            response = ResearchHubApi._fetch_page_with_delay(page)
+            response = self._fetch_page_with_delay(page)
             if response.status_code == 404:
                 paginating = CONTINUE_PAGINATING.STOP
 
         return articles
 
-    @classmethod
-    def _fetch_page_with_delay(cls, page: int) -> requests.Response:
-        site_link = modify_url_query(cls._PAGE_LINK, {"page": str(page)})
+    def _fetch_page_with_delay(self, page: int) -> requests.Response:
+        site_link = modify_url_query(self._site_link, {"page": str(page)})
         delay_random(DELAY_RANGE_S)
         return get_with_retries(site_link)
 
-    @staticmethod
     def _process_results_page(
+        self,
         since: datetime,
         until: datetime,
-        articles: List[Article],
+        articles: List[ArticleSummary],
         posts: List[Any],
     ) -> CONTINUE_PAGINATING:
         for post in posts:
             metadata: Optional[ArticleMetadata] = (
-                ResearchHubApi._single_article_metadata(post)
+                self._single_article_metadata(post)
             )
             paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
 
@@ -81,7 +92,7 @@ class ResearchHubApi:
                 break
             if until >= metadata.publication_date >= since:
                 articles.append(
-                    Article(
+                    ArticleSummary(
                         metadata=metadata,
                         summary=post["documents"]["abstract"],
                     )
@@ -89,8 +100,7 @@ class ResearchHubApi:
 
         return paginating
 
-    @staticmethod
-    def _single_article_metadata(post: Any) -> Optional[ArticleMetadata]:
+    def _single_article_metadata(self, post: Any) -> Optional[ArticleMetadata]:
         metadata: Optional[ArticleMetadata] = None
 
         if isinstance(post["documents"], dict):  # Ignore non-article posts
@@ -100,19 +110,19 @@ class ResearchHubApi:
             metadata = ArticleMetadata(
                 title=post["documents"]["title"],
                 source=Source.RESEARCH_HUB,
-                url=ResearchHubApi._single_article_url(post),
+                url=self._single_article_url(post),
                 publication_date=publication_date,
                 score=post["score"],
             )
 
         return metadata
 
-    @classmethod
-    def _single_article_url(cls, post: Any) -> ParseResult:
+    def _single_article_url(self, post: Any) -> ParseResult:
         document: Any = post["documents"]
         if post["documents"]["pdf_copyright_allows_display"]:
             return urlparse(document["file"])
         else:
             return construct_url(
-                cls._SITE_POST_URL, f"{document['id']}/{document['slug']}"
+                self._site_post_url.geturl(),
+                f"{document['id']}/{document['slug']}",
             )

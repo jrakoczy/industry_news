@@ -1,3 +1,4 @@
+from dataclasses import replace
 from decimal import Decimal
 from functools import lru_cache, wraps
 import logging
@@ -20,13 +21,14 @@ from langchain_google_vertexai import VertexAI
 from langchain_openai import ChatOpenAI
 from langchain_openai.llms.base import BaseOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from industry_news.article import Source, ArticleMetadata
+from industry_news.digest.article import ArticleMetadata
 from industry_news.config import (
     FilterModelConfig,
     SummaryModelConfig,
     load_config,
     load_secrets,
 )
+from industry_news.fetcher.fetcher import Source
 from industry_news.utils import (
     load_as_string,
     load_resource,
@@ -39,19 +41,10 @@ _NUM_OF_DIFFERENT_MODELS = 2
 T = TypeVar("T")
 
 
-class FilterArticlesResponse(BaseModel):
-    reasonings: List[str] = Field(
-        description="Reasonings why an article was selected or not",
-    )
-    relevant_articles: List[int] = Field(
-        description="Line numbers of relevant articles",
-    )
-
-
-class TextSummarization:
+class TextSummarizer:
 
     @staticmethod
-    def _vertex_ai_factory(model_name: str) -> VertexAI:
+    def _vertex_ai(model_name: str) -> VertexAI:
         service_account_key = "GOOGLE_APPLICATION_CREDENTIALS"
 
         os.environ[service_account_key] = str(
@@ -66,7 +59,7 @@ class TextSummarization:
         self,
         summary_prompt_file_name: str = f"{_PROMPT_DIR}/summarize_prompt.txt",
         config: SummaryModelConfig = load_config().llm.summary_model,
-        vertex_ai_factory: Callable[[str], VertexAI] = _vertex_ai_factory,
+        vertex_ai_factory: Callable[[str], VertexAI] = _vertex_ai,
     ) -> None:
         self._summary_prompt_file_name = summary_prompt_file_name
         self._config = config
@@ -79,7 +72,7 @@ class TextSummarization:
     ) -> List[str]:
         """
         Args:
-            text_generator: Use generator to defer loading text logic to a
+            text_generator: Use a generator to delegate loading text logic to a
             method's caller and to avoid loading all text into memory at once.
         """
         summaries: List[str] = []
@@ -93,7 +86,7 @@ class TextSummarization:
             summary: str = self._invoke_model(text)
             summaries.append(summary)
 
-        self._log_total_cost(total_cost_usd)
+        TextSummarizer._log_total_cost(total_cost_usd)
         return summaries
 
     def _invoke_model(self, text: str) -> str:
@@ -103,7 +96,8 @@ class TextSummarization:
         )
         return _verify_output(output=output, type_=str)
 
-    def _log_total_cost(self, total_cost_usd: Decimal) -> None:
+    @staticmethod
+    def _log_total_cost(total_cost_usd: Decimal) -> None:
         _LOGGER.info(
             "Est. total cost of summarization: %.3f USD.",
             float(total_cost_usd),
@@ -126,6 +120,15 @@ class TextSummarization:
     @lru_cache
     def _prompt_char_len(self) -> int:
         return len(load_as_string(self._summary_prompt_file_name))
+
+
+class FilterArticlesResponse(BaseModel):
+    reasonings: List[str] = Field(
+        description="Reasonings why an article was selected or not",
+    )
+    relevant_articles: List[int] = Field(
+        description="Line numbers of relevant articles",
+    )
 
 
 class ArticleFiltering:
@@ -317,7 +320,7 @@ class ArticleFiltering:
 
         return int(
             max_chunk_token_count
-            * 0.95,  # Lazy solution to avoid exceeding a context size after
+            * 0.95,  # Lazy solution to avoid exceeding context size after
             # prepending a number a the beginning of each article title line.
         )
 
@@ -361,10 +364,11 @@ class ArticleFiltering:
 
         for metadata in sorted_articles_metadata:
             if metadata.title in remaining_titles_dict.keys():
-                metadata.why_is_relevant = remaining_titles_dict[
-                    metadata.title
-                ]
-                remaining_metadata.append(metadata)
+                metadata_with_reason: ArticleMetadata = replace(
+                    metadata,
+                    why_is_relevant=remaining_titles_dict[metadata.title],
+                )
+                remaining_metadata.append(metadata_with_reason)
 
         return remaining_metadata
 

@@ -1,19 +1,13 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from typing import Dict, Optional
 from urllib.parse import ParseResult
 
-
-class Source(Enum):
-    REDDIT = "reddit"
-    HACKER_NEWS = "hackernews"
-    RESEARCH_HUB = "researchhub"
-    FUTURE_TOOLS = "futuretools"
+from industry_news.fetcher.fetcher import Source
 
 
-@dataclass
+@dataclass(frozen=True)
 class ArticleMetadata:
     title: str
     source: Source
@@ -34,8 +28,7 @@ class ArticleMetadata:
         return description.split("Title: ")[1].split(".")[0]
 
 
-@dataclass
-class Article:
+@dataclass(frozen=True)
+class ArticleSummary:
     metadata: ArticleMetadata
     summary: str
-    content: Optional[str] = None
