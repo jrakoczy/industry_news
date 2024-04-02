@@ -1,10 +1,11 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from urllib.parse import ParseResult
 
 from industry_news.fetcher.fetcher import Source
+from industry_news import markdown as md
 
 
 @dataclass(frozen=True)
@@ -32,3 +33,17 @@ class ArticleMetadata:
 class ArticleSummary:
     metadata: ArticleMetadata
     summary: str
+
+    def to_markdown_str(self) -> str:
+        title_link: str = md.link(
+            self.metadata.title, self.metadata.url.geturl()
+        )
+        title_header: str = md.header(title_link, level=6)
+        collapsible_summary: str = md.collapsible_section(
+            self.summary, self.metadata.why_is_relevant or "Summary"
+        )
+        return f"{title_header}\n" f"{collapsible_summary}"
+
+
+def summaries_to_markdown(summaries: List[ArticleSummary]) -> str:
+    return "\n\n".join([summary.to_markdown_str() for summary in summaries])

@@ -35,12 +35,19 @@ class ResearchHubApi(SummaryFetcher):
         self,
         site_post_url: ParseResult = _SITE_POST_URL,
         site_link: ParseResult = _SITE_LINK,
-    ) -> None:
-        self._site_post_url = site_post_url
-        self._site_link = site_link
+    ):
+        self._site_post_url: ParseResult = site_post_url
+        self._site_link: ParseResult = site_link
+
+    @staticmethod
+    def source() -> Source:
+        return Source.RESEARCH_HUB
+
+    def subspace(self) -> Optional[str]:
+        return None
 
     def article_summaries(
-        self, since: datetime, until: datetime = datetime.now()
+        self, since: datetime, until: datetime
     ) -> List[ArticleSummary]:
 
         page: int = 1

@@ -1,7 +1,7 @@
 from datetime import datetime
 import logging
 from bs4 import BeautifulSoup
-from typing import List
+from typing import List, Optional
 from requests.models import Response
 from urllib.parse import urlparse, ParseResult
 from industry_news.digest.article import ArticleMetadata
@@ -24,8 +24,15 @@ class FutureToolsScraper(MetadataFetcher):
         super().__init__()
         self._site_link = site_link
 
+    @staticmethod
+    def source() -> Source:
+        return Source.FUTURE_TOOLS
+
+    def subspace(self) -> Optional[str]:
+        return None
+
     def articles_metadata(
-        self, since: datetime, until: datetime = datetime.now()
+        self, since: datetime, until: datetime
     ) -> List[ArticleMetadata]:
         self._LOGGER.info(
             "Fetching articles from FutureTools between %s and %s",

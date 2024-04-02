@@ -1,7 +1,6 @@
 from decimal import Decimal
 from pathlib import Path
 from typing import List, Optional
-from unittest.mock import Base
 from pydantic import BaseModel, SecretStr
 from industry_news.fetcher.fetcher import Source
 from industry_news.utils import load_as_yml
@@ -40,6 +39,7 @@ class SingleSourceConfig(BaseModel):
 class SourcesConfig(BaseModel):
     with_summary: List[SingleSourceConfig]
     without_summary: List[SingleSourceConfig]
+    articles_per_source_limit: int
 
 
 class Config(BaseModel):

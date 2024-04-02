@@ -26,8 +26,15 @@ class HackerNewsScraper(MetadataFetcher):
         super().__init__()
         self._site_link = site_link  # Possible to pass other sorting orders
 
+    @staticmethod
+    def source() -> Source:
+        return Source.HACKER_NEWS
+
+    def subspace(self) -> Optional[str]:
+        return None
+
     def articles_metadata(
-        self, since: datetime, until: datetime = datetime.now()
+        self, since: datetime, until: datetime
     ) -> List[ArticleMetadata]:
         articles_metadata: List[ArticleMetadata] = []
         page_link: Optional[ParseResult] = self._site_link

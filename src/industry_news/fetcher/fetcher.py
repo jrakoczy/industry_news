@@ -5,6 +5,7 @@ from urllib.parse import ParseResult
 import logging
 from typing import Callable, Dict, List, Optional
 from bs4 import BeautifulSoup
+from industry_news.config import SingleSourceConfig, SourcesConfig
 from industry_news.digest.article import ArticleSummary, ArticleMetadata
 from industry_news.fetcher.futuretools_scraper import FutureToolsScraper
 from industry_news.fetcher.hackernews_scraper import HackerNewsScraper
@@ -29,7 +30,22 @@ class CONTINUE_PAGINATING(Enum):
     STOP = False
 
 
-class MetadataFetcher(ABC):
+class Fetcher(ABC):
+    @staticmethod
+    @abstractmethod
+    def source() -> Source:
+        pass
+
+    @abstractmethod
+    def subspace(self) -> Optional[str]:
+        """
+        E.g. a subreddit or a tag. In general: a subcategory of data from a
+        given source.
+        """
+        pass
+
+
+class MetadataFetcher(Fetcher):
     @abstractmethod
     def articles_metadata(
         self, since: datetime, until: datetime
@@ -37,7 +53,7 @@ class MetadataFetcher(ABC):
         pass
 
 
-class SummaryFetcher(ABC):
+class SummaryFetcher(Fetcher):
     @abstractmethod
     def article_summaries(
         self, since: datetime, until: datetime
@@ -56,6 +72,38 @@ METADATA_FETCHERS_BY_SOURCE: Dict[
     Source.HACKER_NEWS: lambda _: HackerNewsScraper(),
     Source.FUTURE_TOOLS: lambda _: FutureToolsScraper(),
 }
+
+
+def init_summary_fetchers(
+    sources_config: SourcesConfig,
+) -> List[SummaryFetcher]:
+    with_summary_sources: List[SingleSourceConfig] = (
+        sources_config.with_summary
+    )
+    return [
+        SUMMARY_FETCHERS_BY_SOURCE[config.name]()
+        for config in with_summary_sources
+    ]
+
+
+def init_metadata_fetchers(
+    sources_config: SourcesConfig,
+) -> List[MetadataFetcher]:
+    without_summary_sources: List[SingleSourceConfig] = (
+        sources_config.without_summary
+    )
+    fetchers: List[MetadataFetcher] = []
+
+    for config in without_summary_sources:
+        if config.subspaces:
+            for subspace in config.subspaces:
+                fetchers.append(
+                    METADATA_FETCHERS_BY_SOURCE[config.name](subspace)
+                )
+        else:
+            fetchers.append(METADATA_FETCHERS_BY_SOURCE[config.name](""))
+
+    return fetchers
 
 
 def fetch_site_text(url: ParseResult) -> Optional[str]:

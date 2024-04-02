@@ -23,3 +23,4 @@ sources:
       subspace: ["machinelearning"] # subreddit names
     - name: "hackernews"
     - name: "futuretools"
+  articles_per_source_limit: 20

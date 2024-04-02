@@ -1,7 +1,7 @@
 import logging
 from urllib.parse import ParseResult, urlparse
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from redditwarp.SYNC import Client
 from redditwarp.models.submission import LinkPost, Submission
 from industry_news.digest.article import ArticleMetadata
@@ -22,6 +22,13 @@ class RedditApi(MetadataFetcher):
             client_secret=secrets.reddit.client_secret.get_secret_value(),
         )
 
+    @staticmethod
+    def source() -> Source:
+        return Source.FUTURE_TOOLS
+
+    def subspace(self) -> Optional[str]:
+        return self._subreddit
+
     def __init__(self, subreddit: str, reddit: Client = _reddit_client()):
         if not subreddit:
             raise ValueError("Subreddit cannot be blank.")
@@ -29,7 +36,7 @@ class RedditApi(MetadataFetcher):
         self._subreddit = subreddit
 
     def articles_metadata(
-        self, since: datetime, until: datetime = datetime.now()
+        self, since: datetime, until: datetime
     ) -> List[ArticleMetadata]:
         return retry(  # No convenient retry mechanism in redditwarp
             lambda: self.articles_metadata_wihtout_retries(since, until),
