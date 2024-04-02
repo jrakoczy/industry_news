@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import List, Optional
 from industry_news.config import load_config
@@ -35,13 +35,25 @@ class NewsDigest:
 
     def to_markdown_file(
         self,
-        since: datetime,
+        since: datetime = None,
         until: Optional[datetime] = None,
         output_file: Optional[Path] = None,
         articles_per_source_limit: int = (
             load_config().sources.articles_per_source_limit
         ),
     ) -> None:
+        """Fetches articles from sources defined in _summary_fetchers and
+        _metadata_fetchers. Filters out articles that do not meet the criteria,
+        summarizes them when necessary and writes results to a markdown file.
+
+        Args:
+            articles_per_source_limit (int, optional): The number of articles
+            that will be writeen to a markdown file for a given source +
+            subspace(subreddit, category, etc). The actual number of fetched
+            and summarized articles will be larger.
+
+            Defaults to `articles_per_source_limit` config value.
+        """
         if not until:
             until = datetime.now()
 
@@ -65,6 +77,7 @@ class NewsDigest:
             summaries: Optional[List[ArticleSummary]] = fail_gracefully(
                 lambda: summary_fetcher.article_summaries(since, until)
             )
+
             if summaries:
                 NewsDigest._write_markdown_to_file(
                     summary_fetcher, output_file, summaries
@@ -87,6 +100,7 @@ class NewsDigest:
                     metadata_fetcher, since, until, articles_per_source_limit
                 )
             )
+
             if summaries:
                 NewsDigest._write_markdown_to_file(
                     metadata_fetcher, output_file, summaries
@@ -96,15 +110,11 @@ class NewsDigest:
     def _write_markdown_to_file(
         fetcher: Fetcher, output_file: Path, summaries: List[ArticleSummary]
     ) -> None:
-        with output_file.open("a") as file:
-            subspace: str = (
-                f": {fetcher.subspace()}" if fetcher.subspace() else ""
-            )
-            section_header: str = header(
-                f"{fetcher.source}{subspace}", level=3
-            )
-            articles_markdown_str: str = summaries_to_markdown(summaries)
+        subspace: str = f": {fetcher.subspace()}" if fetcher.subspace() else ""
+        section_header: str = header(f"{fetcher.source}{subspace}", level=3)
+        articles_markdown_str: str = summaries_to_markdown(summaries)
 
+        with output_file.open("a") as file:
             file.write(f"{section_header}\n{articles_markdown_str}\n\n")
 
     def _summarize_articles_single_source(
