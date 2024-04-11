@@ -28,7 +28,7 @@ from industry_news.config import (
     load_config,
     load_secrets,
 )
-from industry_news.fetcher.fetcher import Source
+from industry_news.sources import Source
 from industry_news.utils import (
     load_as_string,
     load_resource,
@@ -45,13 +45,13 @@ class TextSummarizer:
 
     @staticmethod
     def _vertex_ai(model_name: str) -> VertexAI:
-        service_account_key = "GOOGLE_APPLICATION_CREDENTIALS"
+        service_account_env = "GOOGLE_APPLICATION_CREDENTIALS"
 
-        os.environ[service_account_key] = str(
+        os.environ[service_account_env] = str(
             load_secrets().llm.service_account_file_path
         )
         vertex_ai = VertexAI(model=model_name)
-        os.environ.pop(service_account_key)
+        os.environ.pop(service_account_env)
 
         return vertex_ai
 

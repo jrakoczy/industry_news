@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 from industry_news.config import load_config
@@ -35,7 +35,7 @@ class NewsDigest:
 
     def to_markdown_file(
         self,
-        since: datetime = None,
+        since: datetime,
         until: Optional[datetime] = None,
         output_file: Optional[Path] = None,
         articles_per_source_limit: int = (
@@ -44,7 +44,8 @@ class NewsDigest:
     ) -> None:
         """Fetches articles from sources defined in _summary_fetchers and
         _metadata_fetchers. Filters out articles that do not meet the criteria,
-        summarizes them when necessary and writes results to a markdown file.
+        summarizes those that remained (if necessary) and writes results to a
+        markdown file.
 
         Args:
             articles_per_source_limit (int, optional): The number of articles
@@ -69,15 +70,13 @@ class NewsDigest:
     def _from_sources_providing_summaries(
         self, since: datetime, until: datetime, output_file: Path
     ) -> None:
-        """
-        Make sure we write after processing each source, so we can preserve
-        some results even in case of a failure.
-        """
         for summary_fetcher in self._summary_fetchers:
             summaries: Optional[List[ArticleSummary]] = fail_gracefully(
                 lambda: summary_fetcher.article_summaries(since, until)
             )
-
+        
+            # Make sure we write to a file after processing each source, so we
+            # can preserve some results even in case of a failure.
             if summaries:
                 NewsDigest._write_markdown_to_file(
                     summary_fetcher, output_file, summaries
@@ -90,17 +89,15 @@ class NewsDigest:
         output_file: Path,
         articles_per_source_limit: int,
     ) -> None:
-        """
-        Make sure we write after processing each source, so we can preserve
-        some results even in case of a failure.
-        """
         for metadata_fetcher in self._metadata_fetchers:
             summaries: Optional[List[ArticleSummary]] = fail_gracefully(
-                lambda: self._summarize_articles_single_source(
+                lambda: self._fetch_and_summarize(
                     metadata_fetcher, since, until, articles_per_source_limit
                 )
             )
 
+            # Make sure we write to a file after processing each source, so we
+            # can preserve some results even in case of a failure.
             if summaries:
                 NewsDigest._write_markdown_to_file(
                     metadata_fetcher, output_file, summaries
@@ -117,7 +114,7 @@ class NewsDigest:
         with output_file.open("a") as file:
             file.write(f"{section_header}\n{articles_markdown_str}\n\n")
 
-    def _summarize_articles_single_source(
+    def _fetch_and_summarize(
         self,
         fetcher: MetadataFetcher,
         since: datetime,
