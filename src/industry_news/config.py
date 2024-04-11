@@ -2,7 +2,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import List, Optional
 from pydantic import BaseModel, SecretStr
-from industry_news.fetcher.fetcher import Source
+from industry_news.sources import Source
 from industry_news.utils import load_as_yml
 
 # Config

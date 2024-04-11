@@ -6,7 +6,8 @@ from redditwarp.SYNC import Client
 from redditwarp.models.submission import LinkPost, Submission
 from industry_news.digest.article import ArticleMetadata
 from industry_news.config import Secrets, load_secrets
-from industry_news.fetcher.fetcher import MetadataFetcher, Source
+from industry_news.sources import Source
+from industry_news.fetcher.fetcher import MetadataFetcher
 from industry_news.utils import retry
 
 

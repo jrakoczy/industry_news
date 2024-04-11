@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Dict, List, Optional
 from urllib.parse import ParseResult
 
-from industry_news.fetcher.fetcher import Source
+from industry_news.sources import Source
 from industry_news import markdown as md
 
 

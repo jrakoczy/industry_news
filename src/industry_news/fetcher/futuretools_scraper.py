@@ -5,9 +5,9 @@ from typing import List, Optional
 from requests.models import Response
 from urllib.parse import urlparse, ParseResult
 from industry_news.digest.article import ArticleMetadata
+from industry_news.sources import Source
 from industry_news.fetcher.fetcher import (
     MetadataFetcher,
-    Source,
 )
 from industry_news.fetcher.web_tools import verify_page_element
 from .web_tools import construct_url, get_with_retries

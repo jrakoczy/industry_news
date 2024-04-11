@@ -4,9 +4,9 @@ from typing import Any, List, Optional
 from urllib.parse import ParseResult, urlparse
 import requests
 from industry_news.digest.article import ArticleSummary, ArticleMetadata
+from industry_news.sources import Source
 from industry_news.fetcher.fetcher import (
     CONTINUE_PAGINATING,
-    Source,
     SummaryFetcher,
 )
 from industry_news.fetcher.web_tools import (

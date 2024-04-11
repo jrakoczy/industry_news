@@ -6,10 +6,10 @@ from requests.models import Response
 import re
 from urllib.parse import urljoin, urlparse, ParseResult
 from industry_news.digest.article import ArticleMetadata
+from industry_news.sources import Source
 from industry_news.fetcher.fetcher import (
     CONTINUE_PAGINATING,
     MetadataFetcher,
-    Source,
 )
 from industry_news.fetcher.web_tools import verify_page_element
 from industry_news.utils import delay_random

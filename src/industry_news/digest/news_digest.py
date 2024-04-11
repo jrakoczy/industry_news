@@ -13,9 +13,8 @@ from industry_news.fetcher.fetcher import (
     MetadataFetcher,
     SummaryFetcher,
     fetch_site_text,
-    init_metadata_fetchers,
-    init_summary_fetchers,
 )
+from industry_news.fetcher.fetchers_init import init_metadata_fetchers, init_summary_fetchers
 from industry_news.llm import ArticleFiltering, TextSummarizer
 from industry_news.markdown import header
 from industry_news.utils import fail_gracefully
