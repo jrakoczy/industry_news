@@ -13,7 +13,7 @@ class ArticleMetadata:
     title: str
     source: Source
     url: ParseResult
-    publication_date: datetime
+    publication_date_utc: datetime
     score: int
     context: Dict[str, str] = field(default_factory=lambda: defaultdict(str))
     why_is_relevant: Optional[str] = None

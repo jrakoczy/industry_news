@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from importlib.abc import Traversable
 import importlib.resources
 import logging
@@ -11,6 +12,10 @@ from typing import Dict, Any
 
 T = TypeVar("T")
 RETRIES = 3
+
+
+def to_local_datetime(date_time: datetime, time_zone: timezone) -> datetime:
+    return date_time.replace(tzinfo=time_zone).astimezone(tz=None)
 
 
 def load_resource(resource: str) -> Path:

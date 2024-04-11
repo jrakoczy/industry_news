@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
+import time
 from bs4 import BeautifulSoup
 from typing import List, Optional, Tuple
 from requests.models import Response
@@ -12,7 +13,7 @@ from industry_news.fetcher.fetcher import (
     MetadataFetcher,
 )
 from industry_news.fetcher.web_tools import verify_page_element
-from industry_news.utils import delay_random
+from industry_news.utils import delay_random, to_local_datetime
 from .web_tools import DELAY_RANGE_S, base_url_str, get_with_retries
 from bs4.element import Tag
 
@@ -103,9 +104,9 @@ class HackerNewsScraper(MetadataFetcher):
             title_span=title_span, title_row=title_row
         )
 
-        if article_metadata.publication_date > until:
+        if article_metadata.publication_date_utc > until:
             return CONTINUE_PAGINATING.CONTINUE
-        elif until >= article_metadata.publication_date >= since:
+        elif until >= article_metadata.publication_date_utc >= since:
             urls.append(article_metadata)
             return CONTINUE_PAGINATING.CONTINUE
         else:
@@ -118,7 +119,7 @@ class HackerNewsScraper(MetadataFetcher):
             url=self._single_article_url(title_span),
             title=HackerNewsScraper._single_article_title(title_span),
             source=Source.HACKER_NEWS,
-            publication_date=HackerNewsScraper._single_article_publication_date(
+            publication_date_utc=HackerNewsScraper._single_article_publication_date(
                 title_row
             ),
             score=HackerNewsScraper._single_article_score(title_row),
@@ -141,9 +142,15 @@ class HackerNewsScraper(MetadataFetcher):
 
     @staticmethod
     def _single_article_publication_date(row: Tag) -> datetime:
+        """
+        Returns:
+            datetime: in UTC.
+        """
         date_span: Tag = HackerNewsScraper._span_from_next_row(row, "age")
         publication_date: str = verify_page_element(date_span["title"], str)
-        return datetime.strptime(publication_date, "%Y-%m-%dT%H:%M:%S")
+        return datetime.strptime(
+            publication_date, "%Y-%m-%dT%H:%M:%S"
+        ).replace(tzinfo=timezone.utc)
 
     @staticmethod
     def _single_article_score(row: Tag) -> int:

@@ -50,7 +50,7 @@ def init_metadata_fetchers(
                     METADATA_FETCHERS_BY_SOURCE[config.name](subspace)
                 )
         else:
-            fetchers.append(METADATA_FETCHERS_BY_SOURCE[config.name](""))
+            fetchers.append(METADATA_FETCHERS_BY_SOURCE[config.name](None))
 
     return fetchers
 

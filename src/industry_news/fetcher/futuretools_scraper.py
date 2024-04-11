@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 from bs4 import BeautifulSoup
 from typing import List, Optional
@@ -68,7 +68,7 @@ class FutureToolsScraper(MetadataFetcher):
                     title=FutureToolsScraper._single_article_title(item),
                     source=Source.FUTURE_TOOLS,
                     url=FutureToolsScraper._single_article_url(item),
-                    publication_date=publication_date,
+                    publication_date_utc=publication_date,
                     score=0,  # No scores on the site
                 )
             )
@@ -89,8 +89,11 @@ class FutureToolsScraper(MetadataFetcher):
 
     @staticmethod
     def _single_article_publication_date(div: Tag) -> datetime:
+        """We assume the date is in UTC."""
         date_div: Tag = verify_page_element(
             div.findChildren("div", recursive=False)[0], Tag
         )
         date_text: str = date_div.get_text()
-        return datetime.strptime(date_text, "%B %d, %Y")
+        return datetime.strptime(date_text, "%B %d, %Y").replace(
+            tzinfo=timezone.utc
+        )

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 from typing import Any, List, Optional
 from urllib.parse import ParseResult, urlparse
@@ -94,10 +94,10 @@ class ResearchHubApi(SummaryFetcher):
 
             if metadata is None:  # Skip non-article posts
                 continue
-            if metadata.publication_date < since:
+            if metadata.publication_date_utc < since:
                 paginating = CONTINUE_PAGINATING.STOP
                 break
-            if until >= metadata.publication_date >= since:
+            if until >= metadata.publication_date_utc >= since:
                 articles.append(
                     ArticleSummary(
                         metadata=metadata,
@@ -113,12 +113,12 @@ class ResearchHubApi(SummaryFetcher):
         if isinstance(post["documents"], dict):  # Ignore non-article posts
             publication_date: datetime = datetime.strptime(
                 post["created_date"], "%Y-%m-%dT%H:%M:%S.%fZ"
-            )
+            ).replace(tzinfo=timezone.utc)
             metadata = ArticleMetadata(
                 title=post["documents"]["title"],
                 source=Source.RESEARCH_HUB,
                 url=self._single_article_url(post),
-                publication_date=publication_date,
+                publication_date_utc=publication_date,
                 score=post["score"],
             )
 

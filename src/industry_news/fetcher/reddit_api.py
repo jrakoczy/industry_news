@@ -1,6 +1,6 @@
 import logging
 from urllib.parse import ParseResult, urlparse
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from redditwarp.SYNC import Client
 from redditwarp.models.submission import LinkPost, Submission
@@ -61,9 +61,9 @@ class RedditApi(MetadataFetcher):
                 submission
             )
 
-            if metadata.publication_date > until:
+            if metadata.publication_date_utc > until:
                 continue
-            elif metadata.publication_date < since:
+            elif metadata.publication_date_utc < since:
                 break
 
             articles.append(metadata)
@@ -74,12 +74,12 @@ class RedditApi(MetadataFetcher):
     def _single_article_metadata(submission: Submission) -> ArticleMetadata:
         publication_date: datetime = datetime.fromtimestamp(
             submission.created_ut
-        )
+        ).replace(tzinfo=timezone.utc)
         return ArticleMetadata(
             url=RedditApi._single_article_url(submission),
             title=submission.title,
             source=Source.REDDIT,
-            publication_date=publication_date,
+            publication_date_utc=publication_date,
             score=submission.score,  # Upvotes - downvotes
             context={"subreddit": submission.subreddit.name},
         )

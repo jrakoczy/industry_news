@@ -18,9 +18,12 @@ web:
 sources:
   with_summary:
     - name: "researchhub"
+      subspaces: [] # all
   without_summary:
     - name: "reddit"
-      subspace: ["machinelearning"] # subreddit names
+      subspaces: ["machinelearning"] # subreddit names
     - name: "hackernews"
+      subspaces: [] # all
     - name: "futuretools"
+      subspaces: [] # all
   articles_per_source_limit: 20
