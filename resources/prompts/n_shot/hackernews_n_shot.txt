@@ -1,4 +1,4 @@
-Here's a list:
+Here's a sample list of articles:
 
 1. Title: Math Handwriting API.
 2. Title: Cyberattacks are targeting US water systems, warns EPA and White House.

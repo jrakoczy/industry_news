@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 import logging
-import time
 from bs4 import BeautifulSoup
 from typing import List, Optional, Tuple
 from requests.models import Response
@@ -13,7 +12,7 @@ from industry_news.fetcher.fetcher import (
     MetadataFetcher,
 )
 from industry_news.fetcher.web_tools import verify_page_element
-from industry_news.utils import delay_random, to_local_datetime
+from industry_news.utils import delay_random
 from .web_tools import DELAY_RANGE_S, base_url_str, get_with_retries
 from bs4.element import Tag
 

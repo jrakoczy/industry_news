@@ -1,12 +1,14 @@
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import List
-from industry_news.digest.article import ArticleMetadata
+from industry_news.digest.article import ArticleMetadata, ArticleSummary
 import argparse
 from pathlib import Path
 
+from industry_news.fetcher.futuretools_scraper import FutureToolsScraper
 from industry_news.fetcher.hackernews_scraper import HackerNewsScraper
 from industry_news.fetcher.reddit_api import RedditApi
+from industry_news.fetcher.researchhub_api import ResearchHubApi
 from industry_news.llm import ArticleFiltering, TextSummarizer
 
 
@@ -19,11 +21,12 @@ def main() -> None:
     # NewsDigest().to_markdown_file(args.since, args.until, args.output_file)
 
     since: datetime = datetime.now() - timedelta(hours=2)
-    results: List[ArticleMetadata] = RedditApi().articles_metadata(
+    results: List[ArticleSummary] = ResearchHubApi().article_summaries(
         since=since.astimezone(timezone.utc),
         until=datetime.now().astimezone(timezone.utc),
     )
-    filtered = ArticleFiltering().filter_articles(results)
+
+    filtered = ArticleFiltering().filter_articles([result.metadata for result in results])
 
     summaries = TextSummarizer().summarize(
         (

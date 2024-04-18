@@ -2,12 +2,15 @@ Here's a numbered list of {source_prompt}:
 
 {articles_list}
 
-Please analyze them and leave only those that may contain promising startup ideas or significant breakthrougs in machine learning/AI. When it comes to startup ideas, focus only on those  achievable for a small (1-4 developer/-s) team where the ideas resolve around software product and services (not hardware nor manufacturing).
-Take your time to answer. Analyze each article one-by-one and provide short reasoning before classifying each entry. Reasonings should also be in a form of numbered list and should correspond to respecitve article numbers. Don't include articles titles in your answer. Just a number an reasoning.
-At the end of your answer provide a JSON array with only those titles that match the criteria. Your answer should only contain a list of reasonings and a JSON array nothing more. 
+Please analyze each post to determine if they include promising startup ideas or significant breakthroughs in machine learning/AI. The criteria for selection should focus on:
 
-Here's an example:
+1. Startup Ideas: Only include those that are achievable by a small team (1-4 developers) and revolve around software products and services (excluding hardware or manufacturing).
+2. Machine Learning/AI Breakthroughs: Include posts that discuss significant advancements or applications in machine learning or artificial intelligence.
+
+Provide brief reasonings for each article, detailing why they were included or excluded based on the criteria above. 
+Your answer should be provided in JSON format with two array fields: reasonings and relevant_articles.
+The latter contains reasonings for each article, while the former numbers of only those that match the criteria. 
 
 {examples}
 
-As I mentioned, take your time, analyze each entry case-by-case and provide your answer below:
+Take your time, analyze each entry case-by-case and provide your answer below:

@@ -19,8 +19,8 @@ class RedditApi(MetadataFetcher):
     def _reddit_client() -> Client:
         secrets: Secrets = load_secrets()
         return Client(
-            client_id=secrets.reddit.client_id,
-            client_secret=secrets.reddit.client_secret.get_secret_value(),
+            secrets.reddit.client_id,
+            secrets.reddit.client_secret.get_secret_value(),
         )
 
     @staticmethod

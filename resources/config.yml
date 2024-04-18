@@ -1,9 +1,9 @@
 llm:
   filter_model:
     name: "gpt-4-1106-preview"
-    query_cost_limit_usd: 0.1
+    query_cost_limit_usd: 0.2
     context_size_limit:
-      4096 # Mandatory in some cases as langchain doesn't
+      8192 # Mandatory in some cases as langchain doesn't
       # provide this info for all models
     prompt_to_completion_len_ratio: 0.4 # A guesstimate
   summary_model:
