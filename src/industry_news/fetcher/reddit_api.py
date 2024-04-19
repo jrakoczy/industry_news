@@ -25,7 +25,7 @@ class RedditApi(MetadataFetcher):
 
     @staticmethod
     def source() -> Source:
-        return Source.FUTURE_TOOLS
+        return Source.REDDIT
 
     def subspace(self) -> Optional[str]:
         return self._subreddit

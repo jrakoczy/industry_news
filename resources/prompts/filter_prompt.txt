@@ -15,4 +15,6 @@ The latter contains reasonings for each article, while the former numbers of onl
 
 {examples}
 
-Take your time, analyze each entry case-by-case and provide your answer below:
+Take your time, analyze each entry case-by-case and MAKE SURE YOU DON'T MISS 
+REASONING FOR ANY OF THEM in the reasonings array. The indexes must match.
+You will get a huge reward for the best possible answer. Provide your answer below:

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
@@ -14,7 +14,10 @@ from industry_news.fetcher.fetcher import (
     SummaryFetcher,
     fetch_site_text,
 )
-from industry_news.fetcher.fetchers_init import init_metadata_fetchers, init_summary_fetchers
+from industry_news.fetcher.fetchers_init import (
+    init_metadata_fetchers,
+    init_summary_fetchers,
+)
 from industry_news.llm import ArticleFiltering, TextSummarizer
 from industry_news.markdown import header
 from industry_news.utils import fail_gracefully
@@ -25,11 +28,11 @@ class NewsDigest:
 
     _text_summarizer: TextSummarizer = TextSummarizer()
     _article_filtering: ArticleFiltering = ArticleFiltering()
-    _summary_fetchers: List[SummaryFetcher] = init_summary_fetchers(
-        load_config().sources
+    _summary_fetchers: List[SummaryFetcher] = field(
+        default_factory=lambda: init_summary_fetchers(load_config().sources)
     )
-    _metadata_fetchers: List[MetadataFetcher] = init_metadata_fetchers(
-        load_config().sources
+    _metadata_fetchers: List[MetadataFetcher] = field(
+        default_factory=lambda: init_metadata_fetchers(load_config().sources)
     )
 
     def to_markdown_file(
@@ -73,7 +76,7 @@ class NewsDigest:
             summaries: Optional[List[ArticleSummary]] = fail_gracefully(
                 lambda: summary_fetcher.article_summaries(since, until)
             )
-        
+
             # Make sure we write to a file after processing each source, so we
             # can preserve some results even in case of a failure.
             if summaries:
@@ -107,7 +110,9 @@ class NewsDigest:
         fetcher: Fetcher, output_file: Path, summaries: List[ArticleSummary]
     ) -> None:
         subspace: str = f": {fetcher.subspace()}" if fetcher.subspace() else ""
-        section_header: str = header(f"{fetcher.source}{subspace}", level=3)
+        section_header: str = header(
+            f"{fetcher.source()}{subspace}", level=3
+        )
         articles_markdown_str: str = summaries_to_markdown(summaries)
 
         with output_file.open("a") as file:

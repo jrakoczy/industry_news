@@ -5,6 +5,7 @@ from industry_news.digest.article import ArticleMetadata, ArticleSummary
 import argparse
 from pathlib import Path
 
+from industry_news.digest.news_digest import NewsDigest
 from industry_news.fetcher.futuretools_scraper import FutureToolsScraper
 from industry_news.fetcher.hackernews_scraper import HackerNewsScraper
 from industry_news.fetcher.reddit_api import RedditApi
@@ -16,29 +17,29 @@ logging.basicConfig(level=logging.INFO)
 
 
 def main() -> None:
-    default_since = datetime.now() - timedelta(days=1)
+    default_since = datetime.now() - timedelta(hours=3)
     args = _parse_args(default_since)
-    # NewsDigest().to_markdown_file(args.since, args.until, args.output_file)
+    NewsDigest().to_markdown_file(args.since, args.until, args.output_file)
 
-    since: datetime = datetime.now() - timedelta(hours=2)
-    results: List[ArticleSummary] = ResearchHubApi().article_summaries(
-        since=since.astimezone(timezone.utc),
-        until=datetime.now().astimezone(timezone.utc),
-    )
+    # since: datetime = datetime.now() - timedelta(hours=2)
+    # results: List[ArticleMetadata] = HackerNewsScraper().articles_metadata(
+    #     since=since.astimezone(timezone.utc),
+    #     until=datetime.now().astimezone(timezone.utc),
+    # )
 
-    filtered = ArticleFiltering().filter_articles([result.metadata for result in results])
+    # filtered = ArticleFiltering().filter_articles(results)
 
-    summaries = TextSummarizer().summarize(
-        (
-            "This is a very long test article."
-            "With basically no meaningful content."
-            "With basically no meaningful content."
-            "With basically no meaningful content."
-            "With basically no meaningful content."
-            "With basically no meaningful content."
-            for _ in range(1)
-        )
-    )
+    # summaries = TextSummarizer().summarize(
+    #     (
+    #         "This is a very long test article."
+    #         "With basically no meaningful content."
+    #         "With basically no meaningful content."
+    #         "With basically no meaningful content."
+    #         "With basically no meaningful content."
+    #         "With basically no meaningful content."
+    #         for _ in range(1)
+    #     )
+    # )
 
 
 def _parse_datetime_in_utc(date_string: str) -> datetime:

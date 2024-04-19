@@ -61,7 +61,7 @@ def fetch_site_text(url: ParseResult) -> Optional[str]:
 
 
 def _send_request(url: ParseResult) -> Optional[Response]:
-    LOGGER.info(f"Retrieving article from {url.geturl()}")
+    LOGGER.info(f"Retrieving an article from {url.geturl()}")
     response: Optional[Response] = fail_gracefully(
         lambda: get_with_retries(url)
     )
