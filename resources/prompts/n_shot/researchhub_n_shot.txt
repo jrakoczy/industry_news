@@ -3,44 +3,15 @@ Here's a list of sample articles:
 1. Title: Multiscale modeling of graphene- and nanotube-based reinforced polymer nanocomposites. 
 2. Title: A is for Artificial Intelligence. 
 3. Title: Carbon tax and low-carbon credit: Which policy is more beneficial to the capital-constrained manufacturer's remanufacturing activities?. 
-4. Title: Spillovers and connectedness among climate policy uncertainty, energy, green bond and carbon markets: A global perspective. 
+4. Title: Digital Transformation for Business Technology Operations with Artificial Intelligence (AI) Led Hyperautomation.
 5. Title: Business as unusual: The implications of fossil divestment and green bonds for financial flows, economic growth and energy market. 
-6. Title: Beyond carbon pricing: The role of banking and monetary policy in financing the transition to a low-carbon economy. 
+6. Title: An integrated multi-model approach for air quality assessment: Development and evaluation of the OSCAR Air Quality Assessment System. 
 7. Title: Driving sustainable development: Fiscal policy and the promotion of natural resource efficiency. 
 8. Title: Mapping the Evolution of Green Finance Research and Development in Emerging Green Economies. 
 9. Title: In-situ tracking of NaFePO4 formation in aqueous electrolytes and its electrochemical performances in Na-ion/polysulfide batteries. 
 10. Title: The impact of green finance policy on land ecological security: City-level evidence from China. 
 11. Title: Transitioning green finance from theory to practice for renewable energy development. 
-12. Title: Bibliometric Review on Sustainable Finance. 
-13. Title: Current state and future directions of green and sustainable finance: a bibliometric analysis. 
-14. Title: Current practices, new insights, and emerging trends of financial technologies. 
-15. Title: Past, present, and future of sustainable finance: insights from big data analytics through machine learning of scholarly research. 
-16. Title: Genomics in <i>C. elegans</i>: So many genes, such a little worm: Table 1.. 
-17. Title: A comparison study on mechanical properties of polymer composites reinforced by carbon nanotubes and graphene sheet. 
-18. Title: Characterizing mechanical properties of graphite using molecular dynamics simulation. 
-19. Title: Temperature dependent mechanical properties of graphene reinforced polymer nanocomposites – A molecular dynamics simulation. 
-20. Title: Molecular dynamics simulations of the elastic properties of polymer/carbon nanotube composites. 
-21. Title: Mechanical properties of graphene and graphene-based nanocomposites. 
-22. Title: The Influence of AI: The Revolutionary Effects of Artificial Intelligence in Healthcare Sector. 
-23. Title: Trends in vehicular emissions in China's mega cities from 1995 to 2005. 
-24. Title: Air quality in North America's most populous city – overview of the MCMA-2003 campaign. 
-25. Title: Transport and Urban Air Pollution in India. 
-26. Title: An integrated multi-model approach for air quality assessment: Development and evaluation of the OSCAR Air Quality Assessment System. 
-27. Title: A two-stage inexact joint-probabilistic programming method for air quality management under uncertainty. 
-28. Title: Air pollution and mortality: A history. 
-29. Title: Association between mortality and indicators of traffic-related air pollution in the Netherlands: a cohort study. 
-30. Title: Urban air pollution control policies and strategies: a systematic review. 
-31. Title: Challenges and Way Forward to Maintain Air Quality Standard in Urban Areas. 
-32. Title: Digital Transformation for Business Technology Operations with Artificial Intelligence (AI) Led Hyperautomation. 
-33. Title: Can traffic management strategies improve urban air quality? A review of the evidence. 
-34. Title: Marine and coastal places: Wellbeing in a blue economy. 
-35. Title: Rib waveguides for trapping and transport of particles. 
-36. Title: Genes that act downstream of DAF-16 to influence the lifespan of Caenorhabditis elegans. 
-37. Title: Protocol Update for large-scale genome and gene function analysis with the PANTHER classification system (v.14.0). 
-38. Title: Challenges and Trends in Sustainable Corporate Finance: A Bibliometric Systematic Review. 
-39. Title: Role of S-adenosyl-L-methionine in liver health and injury. 
-40. Title: CDD/SPARCLE: functional classification of proteins via subfamily domain architectures. 
-41. Title: Diet-Induced Developmental Acceleration Independent of TOR and Insulin in C. elegans. 
+12. Title: Past, present, and future of sustainable finance: insights from big data analytics through machine learning of scholarly research. 
 
 And here's an expected output:
 
@@ -49,52 +20,19 @@ And here's an expected output:
     "This article focuses on materials science, specifically reinforced polymer nanocomposites, and does not provide direct opportunities for software-centric startups or AI/ML breakthroughs.",
     "The vague title suggests a broad discussion on AI but does not indicate a significant breakthrough or specific application that could be developed into a software product by a small team.",
     "While this discusses environmental policy's impact on manufacturing, it doesn't suggest specific software applications or AI/ML innovations that could be developed by a small team.",
-    "This research explores interconnections in climate and financial markets, which could inspire data analytics tools for market analysis or policy impact studies, but it lacks a clear AI/ML breakthrough or straightforward software startup idea.",
+    "Discusses AI in digital transformation for businesses, relevant to AI-driven tools in business operations, making it suitable for a startup idea.",
     "Focuses on economic and financial implications of environmental policies, which might indirectly inform software tools for financial analysis but does not present a clear opportunity for a small team software startup or AI/ML innovation.",
-    "Discusses broader economic and financial strategies without a direct link to software products or significant AI/ML advancements achievable by a small developer team.",
+    "Discusses air quality modeling, which could guide software development for environmental simulations or AI-driven predictions, somewhat relevant for AI/ML applications.",
     "Centers on fiscal policies and resource efficiency, which may inform software tools for policy analysis or simulation but lacks a specific AI/ML innovation or direct startup idea.",
     "While mapping research in green finance could inform an analytical tool, it does not provide a significant AI breakthrough or a clearly achievable software startup idea for a small team.",
     "This article is focused on materials science in battery technology and does not provide a direct path to AI/ML innovations or software products.",
     "Although it involves green finance and land management, it's more related to policy impact assessment than to a direct software product or AI/ML innovation for a small team.",
     "Focuses on practical applications of green finance, which might suggest areas for software tools in finance but lacks a direct AI/ML breakthrough.",
-    "A bibliometric review could inspire software for academic analysis or trend tracking, potentially relevant for AI/ML applications in data analytics.",
-    "Discusses the literature on green finance, which could guide development of AI-driven analytical tools for finance, making it relevant for AI/ML breakthroughs.",
-    "Although this article discusses financial technologies, without specifics, it's unclear whether it contains AI/ML innovations or direct startup opportunities.",
-    "Big data and machine learning analysis of finance suggests significant potential for AI applications in financial analytics, relevant for startup ideas in AI.",
-    "Focused on genetics research rather than AI/ML or software applications, thus not suitable for a small team software startup.",
-    "Focuses on material science, specifically comparing mechanical properties, which doesn't provide direct software or AI/ML startup opportunities.",
-    "This is centered on materials science using molecular dynamics, not aligned with AI/ML software developments or achievable startup ideas for a small team.",
-    "Discusses material science in the context of temperature effects on nanocomposites, not directly applicable to AI/ML or software startups.",
-    "Focuses on molecular simulations of materials, which are outside the realm of direct AI/ML software product opportunities for a small team.",
-    "Deals with material science and mechanical properties, not directly relevant to AI/ML software startups.",
-    "Discusses AI in healthcare, which could suggest significant opportunities for AI applications, relevant to AI/ML innovations in health tech startups.",
-    "Focuses on historical data of vehicular emissions, providing potential data sets for AI analysis but lacking a direct AI/ML breakthrough or startup idea.",
-    "Provides an overview of air quality campaigns, which could inform environmental monitoring software but lacks a clear AI/ML breakthrough.",
-    "Reviews urban air pollution in India, possibly guiding AI-driven environmental analysis tools, but not suggesting a significant AI/ML innovation.",
-    "Discusses air quality modeling, which could guide software development for environmental simulations or AI-driven predictions, somewhat relevant for AI/ML applications.",
-    "Involves complex programming for air quality management, potentially inspiring software solutions in environmental policy or management but lacking a clear AI/ML breakthrough.",
-    "Historical analysis of air pollution and mortality, which does not present a direct software development opportunity or AI/ML innovation.",
-    "Studies health impacts of air pollution, which could indirectly inform AI-driven health monitoring systems but doesn't present a significant AI/ML breakthrough.",
-    "Focuses on systematic reviews of air pollution policies, potentially informing software tools for policy analysis but not a direct AI/ML innovation.",
-    "Discusses maintaining air quality standards, potentially guiding software solutions for environmental monitoring, but lacks a direct AI innovation.",
-    "Discusses AI in digital transformation for businesses, relevant to AI-driven tools in business operations, making it suitable for a startup idea.",
-    "Reviews traffic management strategies for air quality improvement, which might inspire AI-driven traffic optimization software but lacks a specific breakthrough.",
-    "Focuses on coastal ecosystem wellbeing, not directly related to AI/ML innovations or software startup opportunities.",
-    "Discusses trapping particles using rib waveguides, a topic more aligned with physical sciences and not suitable
-
- for AI/ML or software startups.",
-    "Research on genetics in lifespan influence, not relevant to AI/ML software developments or direct startup opportunities.",
-    "Discusses genome analysis protocols, more relevant to biological research than AI/ML software products or startups.",
-    "Reviews sustainable corporate finance trends, potentially guiding AI-driven financial analysis tools but lacking a direct AI/ML breakthrough.",
-    "Focuses on liver health and biochemistry, not aligned with AI/ML software developments or suitable for a small team startup.",
-    "Discusses protein classification systems, more relevant to biological sciences than AI/ML or software startup opportunities.",
-    "Focuses on developmental biology in nematodes, not relevant to AI/ML or software startup opportunities."
+    "Big data and machine learning analysis of finance suggests significant potential for AI applications in financial analytics, relevant for startup ideas in AI."
   ],
   "relevant_articles": [
-    12,
-    13,
-    15,
-    26,
-    32
+    4,
+    6,
+    12
   ]
 }

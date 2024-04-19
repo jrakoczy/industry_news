@@ -2,7 +2,9 @@ Here's a numbered list of {source_prompt}:
 
 {articles_list}
 
-Please analyze each post to determine if they include promising startup ideas or significant breakthroughs in machine learning/AI. The criteria for selection should focus on:
+Please analyze each post to determine if they include promising startup ideas or
+significant breakthroughs in machine learning/AI. The criteria for selection should 
+focus on:
 
 1. Startup Ideas: Only include those that are achievable by a small team (1-4 developers) and revolve around software products and services (excluding hardware or manufacturing).
 2. Machine Learning/AI Breakthroughs: Include posts that discuss significant advancements or applications in machine learning or artificial intelligence.

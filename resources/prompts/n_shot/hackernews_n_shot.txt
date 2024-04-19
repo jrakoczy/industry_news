@@ -1,79 +1,39 @@
 Here's a sample list of articles:
 
-1. Title: Math Handwriting API.
+1. Title: Launch Soon: Get Hotels Prices Like Travel Agents.
 2. Title: Cyberattacks are targeting US water systems, warns EPA and White House.
 3. Title: Devin – Future Implications of AI Agents.
 4. Title: Stone Age Humans Chose Their Rocks with Care.
 5. Title: Helldivers II Was Built on an Archaic Engine That You Can't Access Anymore.
 6. Title: Launchpad PPA outage.
-7. Title: Rating English-Language Bookstores.
+7. Title: GitHub's latest AI tool can automatically fix code vulnerabilities.
 8. Title: Household Pi Projects (2022).
 9. Title: Reasons Developers Hate Linters.
 10. Title: Solving the long tail with end to end AI.
 11. Title: Garlic Chicken Without Garlic?
 12. Title: Adaptive foraging behaviours in the Horn of Africa during Toba supereruption.
-13. Title: Ask HN: Examples of public RAG systems in production.
-14. Title: Show HN: Open-source user authentication for Next.js.
-15. Title: GameScent emits 'gunfire' and other scents while you play.
-16. Title: NASA Sees Progress on Blue Origin's Orbital Reef Life Support System.
-17. Title: 3 Reasons Your Productivity Method Is Failing You.
-18. Title: TryCloudflare.
-19. Title: Suspicious Discontinuities.
-20. Title: Launch Soon: Get Hotels Prices Like Travel Agents.
-21. Title: $50K per year for a degree in a low-wage industry − is culinary school worth it?
-22. Title: Remote Work Trends to Watch in 2024.
-23. Title: GitHub's latest AI tool can automatically fix code vulnerabilities.
-24. Title: State of the iPhone [video].
-25. Title: Tiny Model PDF Corpus: URL Embeddings for 8.3M PDFs.
-26. Title: The Tragic Race Condition.
-27. Title: The Hall of Lame (1999).
-28. Title: Trolling Brands by Democratizing Access to Color.
-29. Title: ZenTube.
-30. Title: Saudi Arabia Plans $40B Push into AI.
 
 And here's an expected output:
 
 {
   "reasonings": [
-    "A Math Handwriting API could offer a novel interface for educational software or math-related applications, leveraging AI for handwriting recognition and interpretation.",
+    "Travel agent pricing models might hint at market inefficiencies, possibly exploitable by AI/ML for better pricing strategies.",
     "While cybersecurity is crucial, this article focuses on a specific threat rather than a new technology or service. Not directly related to startup opportunities in software.",
     "Future implications of AI agents suggest a discussion on emerging AI technologies or paradigms, potentially unveiling new ideas for AI-driven services or applications.",
     "This article discusses archaeological findings, which, while interesting, do not present a direct opportunity for software development in AI/ML or startup ideas.",
     "The development of a game on an archaic engine presents a case study in software engineering rather than an opportunity for AI/ML innovation or a new startup idea.",
     "Outage of a service (PPA) is operational in nature, not indicative of a new technology or service opportunity in the AI/ML domain.",
-    "While interesting, rating bookstores doesn't align with AI/ML breakthroughs or software-centric startup ideas suitable for a small team.",
+    "AI tools for code vulnerability fixes represent a significant area for AI-driven development tools, relevant to AI/ML innovation.",
     "DIY projects with Raspberry Pi are hardware-oriented and don't directly suggest a new software product or AI/ML breakthrough.",
     "Developer tools, including linters, are a saturated market. This article's focus on dislike suggests improvement opportunities but not a significant breakthrough or new product.",
     "End-to-end AI for solving specific problems indicates a potential area for startup development, especially in niche markets or long-tail solutions.",
     "A culinary innovation without actual garlic doesn't suggest an AI/ML breakthrough or a software product opportunity.",
     "This historical analysis offers no direct path to a new AI/ML technology or software startup idea.",
-    "Public RAG (Risk Assessment Graph) systems could imply a need for sophisticated risk assessment tools, potentially a niche for AI-driven solutions.",
-    "Open-source authentication solutions have a market, but this does not indicate a significant breakthrough in AI/ML.",
-    "Scent emission in gaming is a hardware-centric innovation, not suitable for a small software development team focusing on AI/ML.",
-    "Progress in life support systems by major corporations involves extensive R&D beyond the scope of a small software team.",
-    "Productivity methods are a broad area but do not directly relate to AI/ML breakthroughs or software products.",
-    "Cloudflare's services are significant in the web infrastructure space but do not represent a new opportunity for AI/ML startups.",
-    "Analyzing discontinuities could relate to data analysis or anomaly detection, potentially hinting at AI/ML applications.",
-    "Travel agent pricing models might hint at market inefficiencies, possibly exploitable by AI/ML for better pricing strategies.",
-    "The economic analysis of education costs does not present a clear opportunity for AI/ML startups.",
-    "Trends in remote work could suggest tools or platforms that facilitate this shift, possibly leveraging AI, but the article's focus is too broad.",
-    "AI tools for code vulnerability fixes represent a significant area for AI-driven development tools, relevant to AI/ML innovation.",
-    "Analysis of current technology trends doesn't inherently suggest a startup opportunity or breakthrough in AI/ML.",
-    "Research on PDF embeddings could offer insights into data extraction and analysis, a potentially rich area for AI/ML applications.",
-    "Discussion on race conditions is more about software engineering challenges than about AI/ML or startup opportunities.",
-    "A historical look at technology failures offers lessons but no direct AI/ML software startup opportunities.",
-    "Democratizing color access through brands is creative but doesn't align with AI/ML innovation or software products.",
-    "The platform's focus is unclear without more context, unlikely to suggest a direct AI/ML breakthrough or startup opportunity.",
-    "Investment in AI by a nation suggests broader trends but doesn't directly offer a startup idea or AI/ML breakthrough."
   ],
   "relevant_articles": [
     1,
     3,
-    10,
-    13,
-    19,
-    20,
-    23,
-    25
+    7,
+    10
   ]
 }
