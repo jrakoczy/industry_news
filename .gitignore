@@ -1,5 +1,7 @@
 # .gitignore
 secrets.yml
+news_digest_*
+last_digest_end.txt
 
 # Ignore the virtual environment
 .venv/

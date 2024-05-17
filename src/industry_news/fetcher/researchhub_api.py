@@ -10,7 +10,6 @@ from industry_news.fetcher.fetcher import (
     SummaryFetcher,
 )
 from industry_news.fetcher.web_tools import (
-    DELAY_RANGE_S,
     construct_url,
     get_with_retries,
     modify_url_query,
@@ -76,7 +75,7 @@ class ResearchHubApi(SummaryFetcher):
 
     def _fetch_page_with_delay(self, page: int) -> requests.Response:
         site_link = modify_url_query(self._site_link, {"page": str(page)})
-        delay_random(DELAY_RANGE_S)
+        delay_random(delay_range_s=(0.5, 1.0))
         return get_with_retries(site_link)
 
     def _process_results_page(

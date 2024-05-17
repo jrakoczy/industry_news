@@ -21,7 +21,7 @@ from langchain_google_vertexai import VertexAI
 from langchain_openai import ChatOpenAI
 from langchain_openai.llms.base import BaseOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from industry_news.digest.article import ArticleMetadata
+from industry_news.digest.article import ArticleMetadata, ArticleSummary
 from industry_news.config import (
     FilterModelConfig,
     SummaryModelConfig,
@@ -30,9 +30,9 @@ from industry_news.config import (
 )
 from industry_news.sources import Source
 from industry_news.utils import (
+    fail_gracefully,
     load_as_string,
     load_resource,
-    retry,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class TextSummarizer:
         os.environ[service_account_env] = str(
             load_secrets().llm.service_account_file_path
         )
-        vertex_ai = VertexAI(model=model_name)
+        vertex_ai = VertexAI(max_retries=3, model=model_name)
         os.environ.pop(service_account_env)
 
         return vertex_ai
@@ -83,18 +83,17 @@ class TextSummarizer:
             if total_cost_usd > self._config.query_cost_limit_usd:
                 break
 
-            summary: str = self._invoke_model(text)
-            summaries.append(summary)
+            summary: Optional[str] = self._invoke_model(text)
+            summaries.append(summary if summary else "Failed to summarize.")
 
         TextSummarizer._log_total_cost(total_cost_usd)
         return summaries
 
-    def _invoke_model(self, text: str) -> str:
-        output: Any = retry(
-            lambda: self._model.invoke({"text": text}),
-            delay_range_s=(2, 2),
+    def _invoke_model(self, text: str) -> Optional[str]:
+        output: Optional[Any] = fail_gracefully(
+            lambda: self._model.invoke({"text": text})
         )
-        return _verify_output(output=output, type_=str)
+        return _verify_output(output=output, type_=str) if output else None
 
     @staticmethod
     def _log_total_cost(total_cost_usd: Decimal) -> None:
@@ -146,6 +145,7 @@ class ArticleFiltering:
     # We need to use ChatOpenAI instead of OpenAI to have structured output.
     _OPENAI_FACTORY: Callable[[str], ChatOpenAI] = (
         lambda model_name: ChatOpenAI(
+            max_retries=3,
             model_name=model_name,
             openai_api_key=load_secrets().llm.openai_api_key.get_secret_value(),
         )
@@ -175,7 +175,33 @@ class ArticleFiltering:
             context_size_limit=config.context_size_limit,
         )
 
-    def filter_articles(
+    def filter_summaries(
+        self, articles_summaries: List[ArticleSummary]
+    ) -> List[ArticleSummary]:
+        """
+        Filters the list of articles based on criteria defined in a prompt.
+
+        Returns:
+            List[ArticleMetadata]: A returned list is sorted in descending
+            order by score.
+        """
+        if not articles_summaries:
+            return []
+
+        source: Source = articles_summaries[0].metadata.source
+
+        sorted_articles: List[ArticleSummary] = self._sort_summaries_by_score(
+            articles_summaries
+        )
+        remaining_titles: Dict[str, str] = self._filter_by_titles(
+            source, [summary.metadata for summary in sorted_articles]
+        )
+
+        return ArticleFiltering._filter_summaries_adding_reasons(
+            sorted_articles, remaining_titles
+        )
+
+    def filter_metadata(
         self, articles_metadata: List[ArticleMetadata]
     ) -> List[ArticleMetadata]:
         """
@@ -189,27 +215,37 @@ class ArticleFiltering:
             return []
 
         source: Source = articles_metadata[0].source
-        _LOGGER.info(
-            "Filtering %s articles. Estimated maximum query cost: %.3f USD.",
-            source.value,
-            float(self._cost_calculator.max_query_cost_usd()),
+        self._log_estimated_cost(source)
+
+        sorted_articles_metadata: List[ArticleMetadata] = (
+            self._sort_metadata_by_score(articles_metadata)
         )
 
-        sorted_articles_metadata: List[ArticleMetadata] = self._sort_by_score(
-            articles_metadata
-        )
-        article_titles_chunks: List[str] = self._titles_to_chunks(
-            sorted_articles_metadata, source
-        )
-        remaining_titles: Dict[str, str] = self._filter_titles_by_prompt(
-            source, article_titles_chunks
+        remaining_titles: Dict[str, str] = self._filter_by_titles(
+            source, sorted_articles_metadata
         )
 
         return ArticleFiltering._filter_metadata_adding_reasons(
             sorted_articles_metadata, remaining_titles
         )
 
-    def _sort_by_score(
+    def _log_estimated_cost(self, source: Source) -> None:
+        _LOGGER.info(
+            "Filtering %s articles. Estimated maximum query cost: %.3f USD.",
+            source.value,
+            float(self._cost_calculator.max_query_cost_usd()),
+        )
+
+    def _sort_summaries_by_score(
+        self, articles_summaries: List[ArticleSummary]
+    ) -> List[ArticleSummary]:
+        return sorted(
+            articles_summaries,
+            key=lambda summary: summary.metadata.score,
+            reverse=True,
+        )
+
+    def _sort_metadata_by_score(
         self, articles_metadata: List[ArticleMetadata]
     ) -> List[ArticleMetadata]:
         return sorted(
@@ -250,6 +286,20 @@ class ArticleFiltering:
 
         return wrapper
 
+    def _filter_by_titles(
+        self,
+        source: Source,
+        articles_metadta: List[ArticleMetadata],
+    ) -> Dict[str, str]:
+        article_titles_chunks: List[str] = self._titles_to_chunks(
+            articles_metadta, source
+        )
+        remaining_titles: Dict[str, str] = self._filter_titles_by_prompt(
+            source, article_titles_chunks
+        )
+
+        return remaining_titles
+
     @_with_openai_cost_logged
     def _filter_titles_by_prompt(
         self, source: Source, numbered_chunks: List[str]
@@ -278,9 +328,7 @@ class ArticleFiltering:
         prompt_variables: Dict[str, str] = ArticleFiltering._prompt_variables(
             source, articles_chunk
         )
-        output: Any = retry(
-            lambda: self._model.invoke(prompt_variables), delay_range_s=(2, 2)
-        )
+        output: Any = self._model.invoke(prompt_variables)
         return _verify_output(output=output, type_=FilterArticlesResponse)
 
     @staticmethod
@@ -371,6 +419,28 @@ class ArticleFiltering:
                 remaining_metadata.append(metadata_with_reason)
 
         return remaining_metadata
+
+    @staticmethod
+    def _filter_summaries_adding_reasons(
+        sorted_articles_summaries: List[ArticleSummary],
+        remaining_titles_dict: Dict[str, str],
+    ) -> List[ArticleSummary]:
+        remaining_summaries: List[ArticleSummary] = []
+
+        for summary in sorted_articles_summaries:
+            if summary.metadata.title in remaining_titles_dict.keys():
+                summary_with_reason: ArticleSummary = replace(
+                    summary,
+                    metadata=replace(
+                        summary.metadata,
+                        why_is_relevant=remaining_titles_dict[
+                            summary.metadata.title
+                        ],
+                    ),
+                )
+                remaining_summaries.append(summary_with_reason)
+
+        return remaining_summaries
 
 
 class OpenAICostCalculator:

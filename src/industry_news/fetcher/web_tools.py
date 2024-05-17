@@ -4,7 +4,7 @@ from furl import furl
 from urllib.parse import urlparse, ParseResult
 from industry_news.utils import retry
 
-DELAY_RANGE_S: Tuple[int, int] = (1, 3)
+DELAY_RANGE_S: Tuple[float, float] = (1.0, 3.0)
 USER_AGENT: str = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     + "(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
@@ -32,7 +32,7 @@ def construct_url(
 
 
 def base_url_str(url: ParseResult) -> str:
-    return furl(url).origin
+    return furl(url.geturl()).origin
 
 
 def verify_page_element(element: Optional[T], type_: Type[R]) -> R:
@@ -43,7 +43,7 @@ def verify_page_element(element: Optional[T], type_: Type[R]) -> R:
 
 def get_with_retries(
     url: ParseResult,
-    delay_range_s: Tuple[int, int] = DELAY_RANGE_S,
+    delay_range_s: Tuple[float, float] = DELAY_RANGE_S,
     user_agent: str = USER_AGENT,
 ) -> requests.models.Response:
     headers: dict = {"User-Agent": user_agent}

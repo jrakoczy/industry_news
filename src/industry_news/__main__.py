@@ -1,45 +1,36 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import List
-from industry_news.digest.article import ArticleMetadata, ArticleSummary
+from typing import Optional
 import argparse
 from pathlib import Path
 
 from industry_news.digest.news_digest import NewsDigest
-from industry_news.fetcher.futuretools_scraper import FutureToolsScraper
-from industry_news.fetcher.hackernews_scraper import HackerNewsScraper
-from industry_news.fetcher.reddit_api import RedditApi
-from industry_news.fetcher.researchhub_api import ResearchHubApi
-from industry_news.llm import ArticleFiltering, TextSummarizer
+
+from industry_news.utils import load_datetime_from_file, write_datetime_to_file
 
 
 logging.basicConfig(level=logging.INFO)
 
+LAST_DIGEST_END = Path("last_digest_end.txt")
+
 
 def main() -> None:
-    default_since = datetime.now() - timedelta(hours=3)
+    default_since = _get_default_since()
     args = _parse_args(default_since)
     NewsDigest().to_markdown_file(args.since, args.until, args.output_file)
+    write_datetime_to_file(LAST_DIGEST_END, args.until)
 
-    # since: datetime = datetime.now() - timedelta(hours=2)
-    # results: List[ArticleMetadata] = HackerNewsScraper().articles_metadata(
-    #     since=since.astimezone(timezone.utc),
-    #     until=datetime.now().astimezone(timezone.utc),
-    # )
 
-    # filtered = ArticleFiltering().filter_articles(results)
-
-    # summaries = TextSummarizer().summarize(
-    #     (
-    #         "This is a very long test article."
-    #         "With basically no meaningful content."
-    #         "With basically no meaningful content."
-    #         "With basically no meaningful content."
-    #         "With basically no meaningful content."
-    #         "With basically no meaningful content."
-    #         for _ in range(1)
-    #     )
-    # )
+def _get_default_since() -> datetime:
+    last_digest_end: Optional[datetime] = load_datetime_from_file(
+        LAST_DIGEST_END
+    )
+    default_since: datetime = (
+        last_digest_end
+        if last_digest_end
+        else datetime.now() - timedelta(days=2)
+    )
+    return default_since
 
 
 def _parse_datetime_in_utc(date_string: str) -> datetime:
@@ -56,17 +47,17 @@ def _parse_args(default_since: datetime) -> argparse.Namespace:
         help=(
             "Optional parameter in ISO-8601 format and local time zone."
             "Will only analyze articles newer than this date-time."
-            "Defaults to 24 hours ago."
+            "Defaults to 2 days ago, give users some time to upvote content."
         ),
     )
     parser.add_argument(
         "--until",
         type=_parse_datetime_in_utc,
-        default=datetime.now().isoformat(),
+        default=(default_since + timedelta(days=1)).isoformat(),
         help=(
             "Optional parameter in ISO-8601 format and local time zone."
             "Will only analyze articles older than this date-time."
-            "Defaults to now."
+            "Defaults to since + 1 day"
         ),
     )
     parser.add_argument(

@@ -11,13 +11,14 @@ Here's a sample list of articles:
 And here's an expected output:
 {
   "reasonings": [
-    "Intel's 'brain-inspired' neuromorphic computer may signify a significant leap in computing architectures that could advance AI's capabilities. However, creating such hardware requires resources beyond a small startup team's scope, focusing more on potential applications rather than creating the hardware itself.",
-    "Amazon's Just Walk Out technology is innovative for retail but largely focuses on hardware and operations rather than software services that can be developed by a small team. It does not describe a specific breakthrough in AI/ML suitable for startup exploitation.",
-    "The electrification of Boston Dynamics' Atlas robot does not present a direct software product or service opportunity for a small startup team. It is a hardware update with no clear AI/ML breakthrough mentioned.",
-    "Google's partnership to provide AI for disaster response implies the use of AI in critical, real-world applications, which could inspire similar AI solutions from startups focused on emergency and disaster management software.",
-    "DeepMind's investment announcement is about financial commitment rather than technological innovation. It indicates a positive environment for AI development but doesn't present a specific breakthrough or startup idea.",
-    "Logitech's AI Prompt Builder software represents a direct application of AI in improving user experience and productivity, suitable for replication or inspiration by a small developer team in creating similar software tools.",
-    "Microsoft's announcement about industrial AI from cloud to factory floor involves AI application in manufacturing and large-scale industrial settings, which typically requires significant resources and integration, less suitable for a small startup focused solely on software."
+    "1. Intel's 'brain-inspired' neuromorphic computer may signify a significant leap in computing architectures that could advance AI's capabilities. However, creating such hardware requires resources beyond a small startup team's scope, focusing more on potential applications rather than creating the hardware itself.",
+    "2. Amazon's Just Walk Out technology is innovative for retail but largely focuses on hardware and operations rather than software services that can be developed by a small team. It does not describe a specific breakthrough in AI/ML suitable for startup exploitation.",
+    "3. The electrification of Boston Dynamics' Atlas robot does not present a direct software product or service opportunity for a small startup team. It is a hardware update with no clear AI/ML breakthrough mentioned.",
+    "4. Google's partnership to provide AI for disaster response implies the use of AI in critical, real-world applications, which could inspire similar AI solutions from startups focused on emergency and disaster management software.",
+    "5. DeepMind's investment announcement is about financial commitment rather than technological innovation. It indicates a positive environment for AI development but doesn't present a specific breakthrough or startup idea.",
+    "6. Logitech's AI Prompt Builder software represents a direct application of AI in improving user experience and productivity, suitable for replication or inspiration by a small developer team in creating similar software tools.",
+    "7. Microsoft's announcement about industrial AI from cloud to factory floor involves AI application in manufacturing and large-scale industrial settings, which typically requires significant resources and integration, less suitable for a small startup focused solely on software."
+  ]
   ],
   "relevant_articles": [
     4,

@@ -14,16 +14,17 @@ Here's a sample list of posts:
 And here's an expected output:
 {
   "reasonings": [
-    "This post discusses best practices for reproducing and comparing models, which is crucial for scientific validation but does not suggest a direct startup opportunity or breakthrough.",
-    "The issue with GAN loss increasing indicates a technical problem rather than a breakthrough or new startup idea. It's more about troubleshooting existing techniques.",
-    "Training models on tabular data with high loss might suggest opportunities for improving ML techniques on structured data, but it is a common problem rather than a breakthrough.",
-    "Finding datasets of satellite images is more about resource aggregation and could inspire a service for dataset discovery, yet it does not represent a breakthrough in ML techniques.",
-    "Exploring RL techniques for training LLMs on single data points could lead to novel ML training methodologies, representing both a potential startup idea and a breakthrough in how models are trained.",
-    "Using LSTM and Transformer for EEG data could lead to advancements in brain-computer interface applications, a potential area for startups focused on health tech and AI.",
-    "This highlights a new technology for generating talking faces in real-time, a significant breakthrough in real-time processing and AI-driven media generation, suitable for a startup.",
-    "Colocating servers for ML/AI purposes touches on infrastructure, which is generally beyond the scope of a small software team and does not represent a breakthrough in ML techniques.",
-    "Analyzing time series to recognize incidents or events could be a valuable tool for industries reliant on time series data like finance or security, offering a startup idea.",
-    "Developing a model to detect and interpret complex tables represents a significant challenge in AI, with applications in data extraction and management, suitable for a startup."
+    "1. This post discusses best practices for reproducing and comparing models, which is crucial for scientific validation but does not suggest a direct startup opportunity or breakthrough.",
+    "2. The issue with GAN loss increasing indicates a technical problem rather than a breakthrough or new startup idea. It's more about troubleshooting existing techniques.",
+    "3. Training models on tabular data with high loss might suggest opportunities for improving ML techniques on structured data, but it is a common problem rather than a breakthrough.",
+    "4. Finding datasets of satellite images is more about resource aggregation and could inspire a service for dataset discovery, yet it does not represent a breakthrough in ML techniques.",
+    "5. Exploring RL techniques for training LLMs on single data points could lead to novel ML training methodologies, representing both a potential startup idea and a breakthrough in how models are trained.",
+    "6. Using LSTM and Transformer for EEG data could lead to advancements in brain-computer interface applications, a potential area for startups focused on health tech and AI.",
+    "7. This highlights a new technology for generating talking faces in real-time, a significant breakthrough in real-time processing and AI-driven media generation, suitable for a startup.",
+    "8. Colocating servers for ML/AI purposes touches on infrastructure, which is generally beyond the scope of a small software team and does not represent a breakthrough in ML techniques.",
+    "9. Analyzing time series to recognize incidents or events could be a valuable tool for industries reliant on time series data like finance or security, offering a startup idea.",
+    "10. Developing a model to detect and interpret complex tables represents a significant challenge in AI, with applications in data extraction and management, suitable for a startup."
+  ]
   ],
   "relevant_articles": [
     5,

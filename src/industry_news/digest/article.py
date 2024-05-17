@@ -36,9 +36,10 @@ class ArticleSummary:
 
     def to_markdown_str(self) -> str:
         title_link: str = md.link(
-            self.metadata.title, self.metadata.url.geturl()
+            f"[{self.metadata.score}] {self.metadata.title}",
+            self.metadata.url.geturl(),
         )
-        title_header: str = md.header(title_link, level=6)
+        title_header: str = md.header(title_link, level=4)
         collapsible_summary: str = md.collapsible_section(
             self.summary, self.metadata.why_is_relevant or "Summary"
         )

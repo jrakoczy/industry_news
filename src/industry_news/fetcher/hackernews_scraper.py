@@ -60,7 +60,9 @@ class HackerNewsScraper(MetadataFetcher):
                 break
 
             page_link = self._next_page_link(soup=soup)
-            delay_random(DELAY_RANGE_S)
+            # Respect robots.txt Crawl-delay
+            # TODO make it configurable or detect automatically
+            delay_random(delay_range_s=(30.0, 30.0))
 
         return articles_metadata
 

@@ -17,18 +17,18 @@ And here's an expected output:
 
 {
   "reasonings": [
-    "This article focuses on materials science, specifically reinforced polymer nanocomposites, and does not provide direct opportunities for software-centric startups or AI/ML breakthroughs.",
-    "The vague title suggests a broad discussion on AI but does not indicate a significant breakthrough or specific application that could be developed into a software product by a small team.",
-    "While this discusses environmental policy's impact on manufacturing, it doesn't suggest specific software applications or AI/ML innovations that could be developed by a small team.",
-    "Discusses AI in digital transformation for businesses, relevant to AI-driven tools in business operations, making it suitable for a startup idea.",
-    "Focuses on economic and financial implications of environmental policies, which might indirectly inform software tools for financial analysis but does not present a clear opportunity for a small team software startup or AI/ML innovation.",
-    "Discusses air quality modeling, which could guide software development for environmental simulations or AI-driven predictions, somewhat relevant for AI/ML applications.",
-    "Centers on fiscal policies and resource efficiency, which may inform software tools for policy analysis or simulation but lacks a specific AI/ML innovation or direct startup idea.",
-    "While mapping research in green finance could inform an analytical tool, it does not provide a significant AI breakthrough or a clearly achievable software startup idea for a small team.",
-    "This article is focused on materials science in battery technology and does not provide a direct path to AI/ML innovations or software products.",
-    "Although it involves green finance and land management, it's more related to policy impact assessment than to a direct software product or AI/ML innovation for a small team.",
-    "Focuses on practical applications of green finance, which might suggest areas for software tools in finance but lacks a direct AI/ML breakthrough.",
-    "Big data and machine learning analysis of finance suggests significant potential for AI applications in financial analytics, relevant for startup ideas in AI."
+    "1. This article focuses on materials science, specifically reinforced polymer nanocomposites, and does not provide direct opportunities for software-centric startups or AI/ML breakthroughs.",
+    "2. The vague title suggests a broad discussion on AI but does not indicate a significant breakthrough or specific application that could be developed into a software product by a small team.",
+    "3. While this discusses environmental policy's impact on manufacturing, it doesn't suggest specific software applications or AI/ML innovations that could be developed by a small team.",
+    "4. Discusses AI in digital transformation for businesses, relevant to AI-driven tools in business operations, making it suitable for a startup idea.",
+    "5. Focuses on economic and financial implications of environmental policies, which might indirectly inform software tools for financial analysis but does not present a clear opportunity for a small team software startup or AI/ML innovation.",
+    "6. Discusses air quality modeling, which could guide software development for environmental simulations or AI-driven predictions, somewhat relevant for AI/ML applications.",
+    "7. Centers on fiscal policies and resource efficiency, which may inform software tools for policy analysis or simulation but lacks a specific AI/ML innovation or direct startup idea.",
+    "8. While mapping research in green finance could inform an analytical tool, it does not provide a significant AI breakthrough or a clearly achievable software startup idea for a small team.",
+    "9. This article is focused on materials science in battery technology and does not provide a direct path to AI/ML innovations or software products.",
+    "10. Although it involves green finance and land management, it's more related to policy impact assessment than to a direct software product or AI/ML innovation for a small team.",
+    "11. Focuses on practical applications of green finance, which might suggest areas for software tools in finance but lacks a direct AI/ML breakthrough.",
+    "12. Big data and machine learning analysis of finance suggests significant potential for AI applications in financial analytics, relevant for startup ideas in AI."
   ],
   "relevant_articles": [
     4,

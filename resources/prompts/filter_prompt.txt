@@ -10,7 +10,7 @@ focus on:
 2. Machine Learning/AI Breakthroughs: Include posts that discuss significant advancements or applications in machine learning or artificial intelligence.
 
 Provide brief reasonings for each article, detailing why they were included or excluded based on the criteria above. 
-Your answer should be provided in JSON format with two array fields: reasonings and relevant_articles.
+Your answer should be provided in JSON format with two array fields: reasonings with corresponding title numbers and relevant_articles.
 The latter contains reasonings for each article, while the former numbers of only those that match the criteria. 
 
 {examples}

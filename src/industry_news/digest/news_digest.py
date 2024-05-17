@@ -67,21 +67,32 @@ class NewsDigest:
             since, until, output_file, articles_per_source_limit
         )
 
-        self._from_sources_providing_summaries(since, until, output_file)
+        self._from_sources_providing_summaries(
+            since, until, output_file, articles_per_source_limit
+        )
 
     def _from_sources_providing_summaries(
-        self, since: datetime, until: datetime, output_file: Path
+        self,
+        since: datetime,
+        until: datetime,
+        output_file: Path,
+        articles_per_source_limit: int,
     ) -> None:
         for summary_fetcher in self._summary_fetchers:
-            summaries: Optional[List[ArticleSummary]] = fail_gracefully(
-                lambda: summary_fetcher.article_summaries(since, until)
+            summaries: List[ArticleSummary] = (
+                summary_fetcher.article_summaries(since, until)
             )
+
+            filtered_summaries: List[ArticleSummary] = (
+                self._article_filtering.filter_summaries(summaries)
+            )
+            filtered_summaries = filtered_summaries[:articles_per_source_limit]
 
             # Make sure we write to a file after processing each source, so we
             # can preserve some results even in case of a failure.
-            if summaries:
+            if filtered_summaries:
                 NewsDigest._write_markdown_to_file(
-                    summary_fetcher, output_file, summaries
+                    summary_fetcher, output_file, filtered_summaries
                 )
 
     def _from_sources_without_summaries(
@@ -111,7 +122,7 @@ class NewsDigest:
     ) -> None:
         subspace: str = f": {fetcher.subspace()}" if fetcher.subspace() else ""
         section_header: str = header(
-            f"{fetcher.source()}{subspace}", level=3
+            f"{fetcher.source().value}{subspace}", level=2
         )
         articles_markdown_str: str = summaries_to_markdown(summaries)
 
@@ -129,7 +140,7 @@ class NewsDigest:
             since, until
         )
         filtered_metadata: List[ArticleMetadata] = (
-            self._article_filtering.filter_articles(articles_metadata)
+            self._article_filtering.filter_metadata(articles_metadata)
         )
         filtered_metadata = filtered_metadata[:articles_per_source_limit]
         summary_texts: List[str] = self._summarize_articles(filtered_metadata)
