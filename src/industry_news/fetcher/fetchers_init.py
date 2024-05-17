@@ -1,8 +1,8 @@
 from industry_news.config import SingleSourceConfig, SourcesConfig
+from industry_news.fetcher.hackernews_api import HackerNewsApi
 from industry_news.sources import Source
 from industry_news.fetcher.fetcher import MetadataFetcher, SummaryFetcher
 from industry_news.fetcher.futuretools_scraper import FutureToolsScraper
-from industry_news.fetcher.hackernews_scraper import HackerNewsScraper
 
 
 from typing import Callable, Dict, List, Optional
@@ -15,7 +15,7 @@ METADATA_FETCHERS_BY_SOURCE: Dict[
     Source, Callable[[Optional[str]], MetadataFetcher]
 ] = {
     Source.REDDIT: lambda subspace: _reddit_api(subspace),
-    Source.HACKER_NEWS: lambda _: HackerNewsScraper(),
+    Source.HACKER_NEWS: lambda _: HackerNewsApi(),
     Source.FUTURE_TOOLS: lambda _: FutureToolsScraper(),
 }
 SUMMARY_FETCHERS_BY_SOURCE: Dict[Source, Callable[[], SummaryFetcher]] = {
