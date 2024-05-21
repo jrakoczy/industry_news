@@ -1,6 +1,6 @@
 import logging
 from urllib.parse import ParseResult, urlparse
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import List, Optional
 from redditwarp.SYNC import Client
 from redditwarp.models.submission import LinkPost, Submission
@@ -8,7 +8,7 @@ from industry_news.digest.article import ArticleMetadata
 from industry_news.config import Secrets, load_secrets
 from industry_news.sources import Source
 from industry_news.fetcher.fetcher import MetadataFetcher
-from industry_news.utils import retry
+from industry_news.utils import retry, to_utc_datetime
 
 
 class RedditApi(MetadataFetcher):
@@ -72,9 +72,7 @@ class RedditApi(MetadataFetcher):
 
     @staticmethod
     def _single_article_metadata(submission: Submission) -> ArticleMetadata:
-        publication_date: datetime = datetime.fromtimestamp(
-            submission.created_ut
-        ).replace(tzinfo=timezone.utc)
+        publication_date: datetime = to_utc_datetime(submission.created_ut)
         return ArticleMetadata(
             url=RedditApi._single_article_url(submission),
             title=submission.title,

@@ -1,6 +1,6 @@
 llm:
   filter_model:
-    name: "gpt-4-1106-preview"
+    name: "gpt-4o-2024-05-13"
     query_cost_limit_usd: 0.2
     context_size_limit:
       8192 # Mandatory in some cases as langchain doesn't
@@ -16,14 +16,14 @@ web:
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
     (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
 sources:
-  with_summary:
-    - name: "researchhub"
-      subspaces: [] # all
+  with_summary: []
+    # - name: "researchhub"
+    #   subspaces: [] # all
   without_summary:
-    - name: "reddit"
-      subspaces: ["machinelearning"] # subreddit names
     - name: "hackernews"
       subspaces: [] # all
-    - name: "futuretools"
-      subspaces: [] # all
+    # - name: "reddit"
+    #   subspaces: ["machinelearning"] # subreddit names
+    # - name: "futuretools"
+    #   subspaces: [] # all
   articles_per_source_limit: 20
