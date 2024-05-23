@@ -1,11 +1,16 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any, List, Optional, Union
 from urllib.parse import ParseResult, urlparse
 from pydantic import BaseModel, validator
+from industry_news.config import load_config
 from industry_news.digest.article import ArticleMetadata
 from industry_news.fetcher.fetcher import MetadataFetcher
-from industry_news.fetcher.web_tools import get_with_retries
+from industry_news.fetcher.web_tools import (
+    get_json_with_backup,
+    get_with_retries,
+)
 from industry_news.sources import Source
 from industry_news.utils import to_utc_datetime
 
@@ -23,7 +28,7 @@ class HackerNewsStory(BaseModel):
     @validator("time", pre=True)
     def convert_epoch_to_datetime(cls, value: int) -> datetime:
         if isinstance(value, int):
-            return to_utc_datetime(value)
+            return to_utc_datetime(value).replace(microsecond=1)
         else:
             raise ValueError("`time` is not an int")
 
@@ -32,6 +37,16 @@ class HackerNewsApi(MetadataFetcher):
     _LOGGER = logging.getLogger(__name__)
     _API_BASE_URL = "https://hacker-news.firebaseio.com/v0"
     _MAX_JUMP_SIZE = 2000
+
+    def __init__(
+        self,
+        api_base_url: str = _API_BASE_URL,
+        data_backup_path: Path = load_config().output.digest
+        / "data"
+        / "hackernews",
+    ) -> None:
+        self._api_base_url = api_base_url
+        self._data_backup_path = data_backup_path
 
     @staticmethod
     def source() -> Source:
@@ -43,6 +58,11 @@ class HackerNewsApi(MetadataFetcher):
     def articles_metadata(
         self, since: datetime, until: datetime
     ) -> List[ArticleMetadata]:
+        # Because of how marvelous the datetime comparison operator works when
+        # comparing datetimes with and without microseconds:
+        since = since.replace(microsecond=0)
+        until = until.replace(microsecond=0)
+
         articles_metadata: List[ArticleMetadata] = []
         item_id = self._get_max_item_id()
 
@@ -51,7 +71,7 @@ class HackerNewsApi(MetadataFetcher):
             time: datetime = item if isinstance(item, datetime) else item.time
 
             if isinstance(item, HackerNewsStory):
-                if until <= time <= since:
+                if until >= time >= since:
                     articles_metadata.append(
                         self._single_article_metadata(item)
                     )
@@ -64,15 +84,17 @@ class HackerNewsApi(MetadataFetcher):
         return articles_metadata
 
     def _get_max_item_id(self) -> int:
-        url: ParseResult = urlparse(f"{self._API_BASE_URL}/maxitem.json")
+        url: ParseResult = urlparse(f"{self._api_base_url}/maxitem.json")
         response = get_with_retries(url)
         return int(response.json())
 
     def _get_story(self, item_id: int) -> Union[HackerNewsStory, datetime]:
         url: ParseResult = urlparse(
-            f"{self._API_BASE_URL}/item/{item_id}.json"
+            f"{self._api_base_url}/item/{item_id}.json"
         )
-        item_data: dict[str, Any] = get_with_retries(url).json()
+        item_data: dict[str, Any] = get_json_with_backup(
+            url, self._id_to_filepath(item_id)
+        )
         publication_date: datetime = to_utc_datetime(item_data["time"])
 
         logging.info(f"[Hackernews] {url.geturl()} -- {publication_date}")
@@ -81,6 +103,9 @@ class HackerNewsApi(MetadataFetcher):
             return HackerNewsApi._data_to_story(item_data, url)
         else:
             return publication_date
+
+    def _id_to_filepath(self, item_id: int) -> Path:
+        return self._data_backup_path / f"{item_id}.json"
 
     @classmethod
     def _jump_size(cls, current_time: datetime, until: datetime) -> int:
@@ -110,7 +135,8 @@ class HackerNewsApi(MetadataFetcher):
     def _data_to_story(
         item_data: dict[str, Any], url: ParseResult
     ) -> HackerNewsStory:
-        # Add an url is it's a Hackernews post (not an external one).
+        # Add an url if it's a Hackernews self-post an not an url to an
+        # external resource.
         if "url" not in item_data:
             item_data["url"] = url.geturl()
         return HackerNewsStory(**item_data)

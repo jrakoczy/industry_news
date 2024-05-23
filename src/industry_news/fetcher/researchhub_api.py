@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 import logging
+from pathlib import Path
 from typing import Any, List, Optional
 from urllib.parse import ParseResult, urlparse
-import requests
+from industry_news.config import load_config
 from industry_news.digest.article import ArticleSummary, ArticleMetadata
 from industry_news.sources import Source
 from industry_news.fetcher.fetcher import (
@@ -11,7 +12,7 @@ from industry_news.fetcher.fetcher import (
 )
 from industry_news.fetcher.web_tools import (
     construct_url,
-    get_with_retries,
+    get_json_with_backup,
     modify_url_query,
 )
 from industry_news.utils import delay_random
@@ -34,9 +35,13 @@ class ResearchHubApi(SummaryFetcher):
         self,
         site_post_url: ParseResult = _SITE_POST_URL,
         site_link: ParseResult = _SITE_LINK,
+        data_backup_path: Path = load_config().output.digest
+        / "data"
+        / "researchhub",
     ):
         self._site_post_url: ParseResult = site_post_url
         self._site_link: ParseResult = site_link
+        self._data_backup_path = data_backup_path
 
     @staticmethod
     def source() -> Source:
@@ -52,14 +57,16 @@ class ResearchHubApi(SummaryFetcher):
         page: int = 1
         articles: List[ArticleSummary] = []
         paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
-        response: requests.Response = get_with_retries(self._site_link)
+        data: dict[str, Any] = get_json_with_backup(
+            self._site_link,
+            self._page_to_filepath(since=since, until=until, page=0),
+        )
 
         while paginating == CONTINUE_PAGINATING.CONTINUE:
             self._LOGGER.info(
                 "Fetching articles from ResearchHub, page: %d", page
             )
 
-            data: Any = response.json()
             posts: List[Any] = data.get("results", [])
 
             paginating = self._process_results_page(
@@ -67,16 +74,26 @@ class ResearchHubApi(SummaryFetcher):
             )
 
             page += 1
-            response = self._fetch_page_with_delay(page)
-            if response.status_code == 404:
-                paginating = CONTINUE_PAGINATING.STOP
+            data = self._fetch_page_with_delay(
+                page,
+                self._page_to_filepath(since=since, until=until, page=page),
+            )
 
         return articles
 
-    def _fetch_page_with_delay(self, page: int) -> requests.Response:
+    def _fetch_page_with_delay(
+        self, page: int, filepath: Path
+    ) -> dict[str, Any]:
         site_link = modify_url_query(self._site_link, {"page": str(page)})
         delay_random(delay_range_s=(0.5, 1.0))
-        return get_with_retries(site_link)
+        data: dict[str, Any] = get_json_with_backup(site_link, filepath)
+        return data
+
+    def _page_to_filepath(
+        self, since: datetime, until: datetime, page: int
+    ) -> Path:
+        filename = f"{since.isoformat()}-{until.isoformat()}-{page}.json"
+        return self._data_backup_path / filename
 
     def _process_results_page(
         self,

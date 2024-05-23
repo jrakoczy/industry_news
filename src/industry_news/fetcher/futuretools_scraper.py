@@ -21,7 +21,6 @@ class FutureToolsScraper(MetadataFetcher):
     _SITE_LINK: ParseResult = construct_url(_BASE_URL, "news")
 
     def __init__(self, site_link: ParseResult = _SITE_LINK) -> None:
-        super().__init__()
         self._site_link = site_link
 
     @staticmethod

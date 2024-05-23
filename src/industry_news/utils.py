@@ -14,12 +14,8 @@ T = TypeVar("T")
 RETRIES = 3
 
 
-def to_local_datetime(date_time: datetime, time_zone: timezone) -> datetime:
-    return date_time.replace(tzinfo=time_zone).astimezone(tz=None)
-
-
 def to_utc_datetime(timestamp: int) -> datetime:
-    return datetime.fromtimestamp(timestamp).replace(tzinfo=timezone.utc)
+    return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
 
 def load_resource(resource: str) -> Path:

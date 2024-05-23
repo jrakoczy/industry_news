@@ -34,6 +34,9 @@ class NewsDigest:
     _metadata_fetchers: List[MetadataFetcher] = field(
         default_factory=lambda: init_metadata_fetchers(load_config().sources)
     )
+    _output_dir: Path = field(
+        default_factory=lambda: load_config().output.digest
+    )
 
     def to_markdown_file(
         self,
@@ -61,7 +64,7 @@ class NewsDigest:
             until = datetime.now()
 
         if not output_file:
-            output_file = NewsDigest._output_file(since, until)
+            output_file = self._output_file(since, until)
 
         self._from_sources_without_summaries(
             since, until, output_file, articles_per_source_limit
@@ -125,7 +128,6 @@ class NewsDigest:
             f"{fetcher.source().value}{subspace}", level=2
         )
         articles_markdown_str: str = summaries_to_markdown(summaries)
-
         with output_file.open("a") as file:
             file.write(f"{section_header}\n{articles_markdown_str}\n\n")
 
@@ -161,10 +163,9 @@ class NewsDigest:
         )
         return summary_texts
 
-    @staticmethod
-    def _output_file(since: datetime, until: datetime) -> Path:
+    def _output_file(self, since: datetime, until: datetime) -> Path:
         datetime_format: str = "%Y-%m-%d-%H"
-        return Path(
+        self._output_dir / (
             f"news_digest"
             f"_{since.strftime(datetime_format)}"
             f"_{until.strftime(datetime_format)}.md"

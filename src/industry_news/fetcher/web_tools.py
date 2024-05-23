@@ -1,4 +1,7 @@
-from typing import Dict, Optional, Type, TypeVar, Tuple
+import json
+from pathlib import Path
+from typing import Any, Dict, Optional, Type, TypeVar, Tuple
+from httplib2 import RETRIES
 import requests
 from furl import furl
 from urllib.parse import urlparse, ParseResult
@@ -45,6 +48,48 @@ def get_with_retries(
     url: ParseResult,
     delay_range_s: Tuple[float, float] = DELAY_RANGE_S,
     user_agent: str = USER_AGENT,
+    retries: int = RETRIES,
 ) -> requests.models.Response:
     headers: dict = {"User-Agent": user_agent}
-    return retry(lambda: requests.get(url.geturl(), headers), delay_range_s)
+    return retry(
+        lambda: requests.get(url.geturl(), headers), delay_range_s, retries
+    )
+
+
+def get_json_with_backup(
+    url: ParseResult,
+    filepath: Path,
+    delay_range_s: Tuple[float, float] = DELAY_RANGE_S,
+    user_agent: str = USER_AGENT,
+    retries: int = RETRIES,
+) -> dict[str, Any]:
+    """
+    Since retrieval from the API is comparitvely very slow, we store fetched
+    items locally. In case of any failures when can retrieve them much
+    quicker than sending the same HTTP request again.
+    """
+    data_from_file: Optional[dict[str, Any]] = _from_file_backup(filepath)
+    item_data: dict[str, Any]
+
+    if data_from_file:
+        item_data = data_from_file
+    else:
+        item_data = get_with_retries(url).json()
+
+    _to_file_backup(filepath, item_data)
+    return item_data
+
+
+def _to_file_backup(filepath: Path, item_data: dict[str, Any]) -> None:
+    with filepath.open("a") as file:
+        file.write(json.dumps(item_data))
+
+
+def _from_file_backup(filepath: Path) -> Optional[dict[str, Any]]:
+    data_from_file: Optional[dict[str, Any]] = None
+
+    if filepath.exists():
+        with filepath.open("r") as file:
+            data_from_file = json.loads(file.read())
+
+    return data_from_file

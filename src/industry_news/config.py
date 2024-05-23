@@ -42,10 +42,15 @@ class SourcesConfig(BaseModel):
     articles_per_source_limit: int
 
 
+class OutputConfig(BaseModel):
+    digest: Path
+
+
 class Config(BaseModel):
     llm: LLMConfig
     web: WebConfig
     sources: SourcesConfig
+    output: OutputConfig
 
 
 _config: Optional[Config] = None
