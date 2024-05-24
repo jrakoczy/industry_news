@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from importlib.abc import Traversable
 import importlib.resources
+import json
 import logging
 import os
 from pathlib import Path
@@ -78,3 +79,19 @@ def load_datetime_from_file(file_path: Path) -> Optional[datetime]:
 def write_datetime_to_file(file_path: Path, date_time: datetime) -> None:
     with open(file_path, "w") as file:
         file.write(date_time.isoformat())
+
+
+def to_file_backup(filepath: Path, item_data: dict[str, Any]) -> None:
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    with filepath.open("w+") as file:
+        file.write(json.dumps(item_data))
+
+
+def from_file_backup(filepath: Path) -> Optional[dict[str, Any]]:
+    data_from_file: Optional[dict[str, Any]] = None
+
+    if filepath.exists():
+        with filepath.open("r") as file:
+            data_from_file = json.loads(file.read())
+
+    return data_from_file

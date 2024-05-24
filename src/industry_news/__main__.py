@@ -28,7 +28,7 @@ def _get_default_since() -> datetime:
     default_since: datetime = (
         last_digest_end
         if last_digest_end
-        else datetime.now().astimezone(timezone.utc) - timedelta(days=6)
+        else datetime.now().astimezone(timezone.utc) - timedelta(minutes=15)
     )
     return default_since
 
@@ -53,7 +53,7 @@ def _parse_args(default_since: datetime) -> argparse.Namespace:
     parser.add_argument(
         "--until",
         type=_parse_datetime_in_utc,
-        default=(default_since + timedelta(days=4)).isoformat(),
+        default=(default_since + timedelta(minutes=15)).isoformat(),
         help=(
             "Optional parameter in ISO-8601 format and local time zone."
             "Will only analyze articles older than this date-time."

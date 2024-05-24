@@ -1,4 +1,4 @@
-import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, TypeVar, Tuple
 from httplib2 import RETRIES
@@ -6,12 +6,16 @@ import requests
 from furl import furl
 from urllib.parse import urlparse, ParseResult
 from industry_news.utils import retry
+from industry_news.utils import to_file_backup
+from industry_news.utils import from_file_backup
 
 DELAY_RANGE_S: Tuple[float, float] = (1.0, 3.0)
 USER_AGENT: str = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     + "(KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
 )
+_LOGGER = logging.getLogger(__name__)
+
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -68,28 +72,16 @@ def get_json_with_backup(
     items locally. In case of any failures when can retrieve them much
     quicker than sending the same HTTP request again.
     """
-    data_from_file: Optional[dict[str, Any]] = _from_file_backup(filepath)
+    data_from_file: Optional[dict[str, Any]] = from_file_backup(filepath)
     item_data: dict[str, Any]
 
     if data_from_file:
+        _LOGGER.info(f"Loaded from a backup file: {filepath}")
         item_data = data_from_file
     else:
-        item_data = get_with_retries(url).json()
+        item_data = get_with_retries(
+            url, delay_range_s, user_agent, retries
+        ).json()
 
-    _to_file_backup(filepath, item_data)
+    to_file_backup(filepath, item_data)
     return item_data
-
-
-def _to_file_backup(filepath: Path, item_data: dict[str, Any]) -> None:
-    with filepath.open("a") as file:
-        file.write(json.dumps(item_data))
-
-
-def _from_file_backup(filepath: Path) -> Optional[dict[str, Any]]:
-    data_from_file: Optional[dict[str, Any]] = None
-
-    if filepath.exists():
-        with filepath.open("r") as file:
-            data_from_file = json.loads(file.read())
-
-    return data_from_file

@@ -165,7 +165,7 @@ class NewsDigest:
 
     def _output_file(self, since: datetime, until: datetime) -> Path:
         datetime_format: str = "%Y-%m-%d-%H"
-        self._output_dir / (
+        return self._output_dir / (
             f"news_digest"
             f"_{since.strftime(datetime_format)}"
             f"_{until.strftime(datetime_format)}.md"

@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from typing import Any, List, Optional
 from urllib.parse import ParseResult, urlparse
+
 from industry_news.config import load_config
 from industry_news.digest.article import ArticleSummary, ArticleMetadata
 from industry_news.sources import Source
@@ -12,10 +13,10 @@ from industry_news.fetcher.fetcher import (
 )
 from industry_news.fetcher.web_tools import (
     construct_url,
-    get_json_with_backup,
+    get_with_retries,
     modify_url_query,
 )
-from industry_news.utils import delay_random
+from industry_news.utils import delay_random, from_file_backup
 
 
 class ResearchHubApi(SummaryFetcher):
@@ -38,10 +39,27 @@ class ResearchHubApi(SummaryFetcher):
         data_backup_path: Path = load_config().output.digest
         / "data"
         / "researchhub",
+        load_data_from_backup: bool = False,
     ):
+        """
+        Args:
+            load_data_from_backup (bool, optional): _description_. Defaults to
+            False. If set to True, the data will be loaded from a dir specified
+            in py:attr:_data_backup_path. It will ONLY work if this data set
+            contains all required ResearchHub pages, it is not possible to fall
+            back to requests to the Research Hub API in case of missing files.
+            They use ascending natural numbers as pagination parameters
+            means a contant of every page is different each time you fetch it
+            with the same parameter value.
+
+            It still useful to use backup files if the whole retrieval process
+            succeeded, but the code failed at some later stage when analyzing
+            the data.
+        """
         self._site_post_url: ParseResult = site_post_url
         self._site_link: ParseResult = site_link
         self._data_backup_path = data_backup_path
+        self._load_data_from_backup = load_data_from_backup
 
     @staticmethod
     def source() -> Source:
@@ -57,12 +75,9 @@ class ResearchHubApi(SummaryFetcher):
         page: int = 1
         articles: List[ArticleSummary] = []
         paginating: CONTINUE_PAGINATING = CONTINUE_PAGINATING.CONTINUE
-        data: dict[str, Any] = get_json_with_backup(
-            self._site_link,
-            self._page_to_filepath(since=since, until=until, page=0),
-        )
 
         while paginating == CONTINUE_PAGINATING.CONTINUE:
+            data: dict[str, Any] = self._fetch_page_with_delay(page)
             self._LOGGER.info(
                 "Fetching articles from ResearchHub, page: %d", page
             )
@@ -74,25 +89,39 @@ class ResearchHubApi(SummaryFetcher):
             )
 
             page += 1
-            data = self._fetch_page_with_delay(
-                page,
-                self._page_to_filepath(since=since, until=until, page=page),
-            )
 
         return articles
 
-    def _fetch_page_with_delay(
-        self, page: int, filepath: Path
-    ) -> dict[str, Any]:
-        site_link = modify_url_query(self._site_link, {"page": str(page)})
+    def _fetch_page_with_delay(self, page: int) -> dict[str, Any]:
         delay_random(delay_range_s=(0.5, 1.0))
-        data: dict[str, Any] = get_json_with_backup(site_link, filepath)
+        data: dict[str, Any] = self._get_page_data(page)
         return data
 
-    def _page_to_filepath(
-        self, since: datetime, until: datetime, page: int
-    ) -> Path:
-        filename = f"{since.isoformat()}-{until.isoformat()}-{page}.json"
+    def _get_page_data(self, page: int) -> dict[str, Any]:
+        """See :py:meth:~.__init__ 's comment."""
+        data: dict[str, Any]
+
+        if self._load_data_from_backup:
+            data = self._get_data_from_backup(page)
+        else:
+            site_link = modify_url_query(self._site_link, {"page": str(page)})
+            data = get_with_retries(site_link).json()
+
+        return data
+
+    def _get_data_from_backup(self, page: int) -> dict[str, Any]:
+        data_from_file: Optional[dict[str, Any]] = from_file_backup(
+            self._page_to_filepath(page)
+        )
+        if not data_from_file:
+            raise FileNotFoundError(
+                f"Can't load Research hub page {page} from backup files."
+            )
+
+        return data_from_file
+
+    def _page_to_filepath(self, page: int) -> Path:
+        filename = f"{page}.json"
         return self._data_backup_path / filename
 
     def _process_results_page(
