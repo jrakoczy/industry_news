@@ -1,36 +1,38 @@
 Here's a sample list of posts:
 
-1. Title: [D] Reproducing and Comparing Models from Research - Best Practices?. Subreddit: MachineLearning.
-2. Title: [P] Training a VQGAN but GAN loss keeps going up. Subreddit: MachineLearning.
-3. Title: [D] Training model on tabular data resulting in high loss. Subreddit: MachineLearning.
-4. Title: [D] Finding data sets of satellite images. Subreddit: MachineLearning.
-5. Title: [D] What RL technique can be used to train an LLM on single preference data points, and not pairs?. Subreddit: MachineLearning.
-6. Title: [P] Training LSTM and Transformer on EEG Data. Subreddit: MachineLearning.
-7. Title: [R] Microsoft presents VASA-1: Lifelike Audio-Drive Talking Faces Generated in Real Time. Subreddit: MachineLearning.
-8. Title: [D], [R], Colocation for servers with 4090 GPUs with purpose to use for ML/AI. Subreddit: MachineLearning.
-9. Title: [D] Analysing 100s of time series to recognise incidents/events via correlation. Subreddit: MachineLearning.
-10. Title: [D] I want to train a model that will detect complex tables and extract its content meaningfully. How to do it?. Subreddit: MachineLearning.
+1. Title: Creating ZIP Files (in the browser) with Javascript. Subreddit: programming.
+2. Title: Ian Clarke breaks down his vision for a decentralized Internet (video). Subreddit: programming.
+3. Title: 12 years of the com.lihaoyi Scala Platform. Subreddit: programming.
+4. Title: `Bytes`: The Lesser-Known Python Built-In Sequence. Subreddit: programming.
+5. Title: Galags Clone in C++. Subreddit: programming.
+6. Title: Introduction to the Odin Programming Language -- A giant article I've written to help people get into Odinlang. Subreddit: programming.
+7. Title: Stunningly good design advice from an AI reading my design diary. Subreddit: programming.
+8. Title: Transforming GraphQL Schema Design with AI: Lessons from Wayfair. Subreddit: programming.
+9. Title: ACID properties: Simplified and Illustrated. Subreddit: programming.
+10. Title: Programmers should stop celebrating incompetence. Subreddit: programming.
+11. Title: AI Adoption Surges Among Programmers as JavaScript Dominates. Subreddit: programming.
+12. Title: ASCII Silhouettify. Subreddit: programming.
 
 And here's an expected output:
+
 {
   "reasonings": [
-    "1. This post discusses best practices for reproducing and comparing models, which is crucial for scientific validation but does not suggest a direct startup opportunity or breakthrough.",
-    "2. The issue with GAN loss increasing indicates a technical problem rather than a breakthrough or new startup idea. It's more about troubleshooting existing techniques.",
-    "3. Training models on tabular data with high loss might suggest opportunities for improving ML techniques on structured data, but it is a common problem rather than a breakthrough.",
-    "4. Finding datasets of satellite images is more about resource aggregation and could inspire a service for dataset discovery, yet it does not represent a breakthrough in ML techniques.",
-    "5. Exploring RL techniques for training LLMs on single data points could lead to novel ML training methodologies, representing both a potential startup idea and a breakthrough in how models are trained.",
-    "6. Using LSTM and Transformer for EEG data could lead to advancements in brain-computer interface applications, a potential area for startups focused on health tech and AI.",
-    "7. This highlights a new technology for generating talking faces in real-time, a significant breakthrough in real-time processing and AI-driven media generation, suitable for a startup.",
-    "8. Colocating servers for ML/AI purposes touches on infrastructure, which is generally beyond the scope of a small software team and does not represent a breakthrough in ML techniques.",
-    "9. Analyzing time series to recognize incidents or events could be a valuable tool for industries reliant on time series data like finance or security, offering a startup idea.",
-    "10. Developing a model to detect and interpret complex tables represents a significant challenge in AI, with applications in data extraction and management, suitable for a startup."
-  ]
+    "1. Not relevant as it focuses on web development rather than AI/ML advancements.",
+    "2. Not relevant as it discusses decentralization rather than AI/ML technologies.",
+    "3. Not relevant as it focuses on Scala platform history rather than AI/ML advancements.",
+    "4. Not relevant as it discusses Python features rather than AI/ML technologies.",
+    "5. Not relevant as it focuses on game development rather than AI/ML advancements.",
+    "6. Not relevant as it focuses on a programming language rather than AI/ML advancements.",
+    "7. Relevant as it discusses AI providing design advice, impacting software development.",
+    "8. Relevant as it discusses using AI to transform GraphQL schema design, impacting software development.",
+    "9. Not relevant as it focuses on database properties rather than AI/ML advancements.",
+    "10. Not relevant as it discusses professional culture rather than AI/ML advancements.",
+    "11. Relevant as it discusses the increasing adoption of AI among programmers, impacting software development.",
+    "12. Not relevant as it focuses on a specific project rather than AI/ML advancements."
   ],
   "relevant_articles": [
-    5,
-    6,
     7,
-    9,
-    10
+    8,
+    11
   ]
 }
