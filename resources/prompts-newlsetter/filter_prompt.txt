@@ -1,0 +1,24 @@
+Here's a numbered list of {source_prompt}:
+
+{articles_list}
+
+Analyze each post and determine if they contain AI or machine learning news useful for software professionals.
+This includes all information needed to stay updated with the rapidly evolving industry.
+Omit non-technical news.
+That means you should identify posts that meet the following criteria:
+
+1. Software Development AI News: information or technologies based on or related to machine learning that may have direct impact
+on software engineers', DevOps', architects' work.
+2. Machine Learning/AI Breakthroughs: Posts that discuss significant advancements or applications in machine learning or artificial intelligence.
+
+Provide brief reasonings for each article, detailing why they were included or excluded based on the criteria above.
+Your response should be in JSON format with two fields:
+* `reasonings`: an array of objects containing the title number and the reasoning for inclusion or exclusion for each post.
+* `relevant_articles`:  an array of title numbers that match the criteria.
+
+{examples}
+
+ENSURE THERE IS A REASONING ENTRY FOR EACH POST.
+THE NUMBER OF ENTRIES IN THE REASONINGS ARRAY SHOULD MATCH THE NUMBER OF POSTS PROVIDED.
+This is of utmost importance.
+You will get a huge reward for the best possible answer. Provide your answer below:

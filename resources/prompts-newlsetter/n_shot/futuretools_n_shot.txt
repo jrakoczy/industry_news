@@ -1,0 +1,33 @@
+Here's a sample list of articles:
+
+1. Title: A complete breakdown of all of Apple's AI announcements at WWDC
+2. Title: Elon Musk threatens to ban Apple devices from his companies over Apple's ChatGPT integrations
+3. Title: F1 Unveils AI-Generated Trophy for Montreal Grand Prix Winner Created by Amazon
+4. Title: OpenAI Sora's biggest rival is here: Chinese AI model Kling creates videos with more accuracy
+5. Title: Adobe terms clarified: Will never own your work, or use it to train AI
+6. Title: Update on the Recall preview feature for Copilot+ PCs
+7. Title: Ashton Kutcher Is Getting Dragged For His Comments About AI
+8. Title: Artificial intelligence is running for mayor of Cheyenne
+9. Title: Introducing Stable Audio Open - An Open Source Model for Audio Samples and Sound Design
+10. Title: Humane warns AI Pin owners to 'immediately' stop using its charging case
+11. Title: AI apocalypse? ChatGPT, Claude and Perplexity all went down at the same time
+12. Title: Elon Musk told Nvidia to ship AI chips reserved for Tesla to X, xAI
+
+And here's an expected output:
+{
+  "reasonings": [
+    "1. Relevant as it covers Apple's new AI technologies, which are significant for developers and software professionals.",
+    "2. Not relevant as it is more about corporate decisions rather than technical details.",
+    "3. Not relevant as it focuses on a specific AI application in design, not useful for software professionals.",
+    "4. Relevant due to the potential competitive advancements in AI model capabilities.",
+    "5. Not relevant as it pertains to legal terms rather than technological advancements.",
+    "6. Relevant as it discusses a new feature that could affect software development workflows.",
+    "7. Not relevant as it focuses on a celebrity's comments rather than technical developments.",
+    "8. Not relevant as it is more of a novelty news piece rather than a technical update.",
+    "9. Relevant as it introduces an open-source AI model that could impact sound design and related software development.",
+    "10. Not relevant as it pertains to a specific product warning, not useful for software professionals.",
+    "11. Not relevant as it focuses on a temporary outage rather than a technical breakthrough.",
+    "12. Not relevant as it pertains to corporate logistics rather than technical advancements."
+  ],
+  "relevant_articles": [1, 4, 6, 9]
+}

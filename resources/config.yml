@@ -16,16 +16,16 @@ web:
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
     (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
 sources:
-  with_summary:
-    - name: "researchhub"
-      subspaces: [] # all
+  with_summary: []
+    # - name: "researchhub"
+    #   subspaces: [] # all
   without_summary:
     - name: "hackernews"
       subspaces: [] # all
-    - name: "reddit"
-      subspaces: ["machinelearning"] # subreddit names
-    - name: "futuretools"
-      subspaces: [] # all
+    # - name: "reddit"
+    #   subspaces: ["machinelearning"] # subreddit names
+    # - name: "futuretools"
+    #   subspaces: [] # all
   articles_per_source_limit: 20
 output:
   digest: "/home/kuba/business/digest/ai"

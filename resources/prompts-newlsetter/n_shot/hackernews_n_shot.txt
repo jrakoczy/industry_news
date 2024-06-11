@@ -1,0 +1,36 @@
+Here's a sample list of articles:
+
+1. Title: POV-Ray – The Persistence of Vision Raytracer
+2. Title: macOS Sequoia to Allow iCloud Logins in Virtual Machines on ARM Macs
+3. Title: Apple's On-Device and Server Foundation Models
+4. Title: Exploring Gleam, a type-safe language on the BEAM
+5. Title: NanoGPT: The simplest, fastest repository for training medium-sized GPTs
+6. Title: Free Quality SoundFonts (Sf2)
+7. Title: Private Cloud Compute: A new frontier for AI privacy in the cloud
+8. Title: DuckDB Isn't Just Fast
+9. Title: I built an ROV to solve missing person cases
+10. Title: Exploring TrustZone-M on the NRF9160
+11. Title: A Short History of CP/M-86 – By Bradford Morgan White
+12. Title: The rarest move in chess [video]
+13. Title: Trieve (YC W24) Is Hiring a DevRel Software Engineer
+
+And here's an expected output:
+
+{
+  "reasonings": [
+    "1. Not relevant as it focuses on a specific ray tracing application rather than AI/ML advancements.",
+    "2. Not relevant as it discusses virtual machine capabilities rather than AI/ML technologies.",
+    "3. Relevant as it discusses AI models that could impact software development and deployment.",
+    "4. Not relevant as it focuses on a programming language rather than AI/ML advancements.",
+    "5. Relevant as it introduces a new tool for training GPT models, significant for AI/ML practitioners.",
+    "6. Not relevant as it pertains to audio resources rather than AI/ML advancements.",
+    "7. Relevant as it discusses AI privacy solutions in the cloud, impacting AI/ML deployment.",
+    "8. Not relevant as it focuses on database performance rather than AI/ML technologies.",
+    "9. Not relevant as it focuses on a specific project rather than AI/ML advancements.",
+    "10. Not relevant as it discusses hardware security features rather than AI/ML advancements.",
+    "11. Not relevant as it discusses historical computing rather than AI/ML advancements.",
+    "12. Not relevant as it discusses chess rather than AI/ML advancements.",
+    "13. Not relevant as it discusses a job opening rather than AI/ML advancements."
+  ],
+  "relevant_articles": [3, 5, 7]
+}

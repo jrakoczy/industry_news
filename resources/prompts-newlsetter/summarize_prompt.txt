@@ -1,0 +1,5 @@
+Provide a concise summary of the following text, focusing on the main points WITHOUT
+including any metadata (title, author's name, etc.). If you are listing elements,
+use markdown lists. Here's the text to summarize:
+
+{text}
