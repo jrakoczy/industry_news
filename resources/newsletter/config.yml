@@ -1,0 +1,30 @@
+llm:
+  filter_model:
+    name: "gpt-4o-2024-05-13"
+    query_cost_limit_usd: 1.0
+    context_size_limit:
+      8192 # Mandatory in some cases as langchain doesn't
+    # provide this info for all models
+    prompt_to_completion_len_ratio: 0.4 # A guesstimate
+  summary_model:
+    name: "gemini-1.0-pro"
+    query_cost_limit_usd: 0.1
+    cost_per_1k_characters_usd: 0.000125
+    prompt_to_completion_len_ratio: 3.0 # A guesstimate
+web:
+  user_agent: >
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
+    (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+sources:
+  with_summary: [ ]
+  without_summary:
+    - name: "hackernews"
+      subspaces: [ ] # all
+    - name: "reddit"
+      subspaces: [ "machinelearning", "programming" ] # subreddit names
+    - name: "futuretools"
+      subspaces: [ ] # all
+  articles_per_source_limit: 20
+output:
+  digest: "/home/kuba/business/digest/ai"
+

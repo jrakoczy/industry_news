@@ -13,7 +13,7 @@ on software engineers', DevOps', architects' work.
 
 Provide brief reasonings for each article, detailing why they were included or excluded based on the criteria above.
 Your response should be in JSON format with two fields:
-* `reasonings`: an array of objects containing the title number and the reasoning for inclusion or exclusion for each post.
+* `reasonings`: an array of strings containing the title number and the reasoning for inclusion or exclusion for each post.
 * `relevant_articles`:  an array of title numbers that match the criteria.
 
 {examples}
