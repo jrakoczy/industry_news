@@ -36,7 +36,7 @@ class ResearchHubApi(SummaryFetcher):
         self,
         site_post_url: ParseResult = _SITE_POST_URL,
         site_link: ParseResult = _SITE_LINK,
-        data_backup_path: Path = load_config().output.digest
+        data_backup_path: Path = load_config().digest.out_path
         / "data"
         / "researchhub",
         load_data_from_backup: bool = False,

@@ -35,7 +35,7 @@ class NewsDigest:
         default_factory=lambda: init_metadata_fetchers(load_config().sources)
     )
     _output_dir: Path = field(
-        default_factory=lambda: load_config().output.digest
+        default_factory=lambda: load_config().digest.out_path / load_config().digest.name
     )
 
     def to_markdown_file(

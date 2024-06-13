@@ -27,6 +27,7 @@ sources:
     # - name: "futuretools"
     #   subspaces: [] # all
   articles_per_source_limit: 20
-output:
-  digest: "/home/kuba/business/digest/ai"
+digest:
+  out_path: "/home/kuba/business/digest/ai"
+  name: "ai"
 

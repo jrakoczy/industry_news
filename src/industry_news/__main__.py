@@ -8,29 +8,33 @@ from industry_news.digest.news_digest import NewsDigest
 
 from industry_news.utils import load_datetime_from_file, write_datetime_to_file
 
-
 logging.basicConfig(level=logging.INFO)
 
 LAST_DIGEST_END = Path("last_digest_end.txt")
 
 
 def main() -> None:
-    default_since = _get_default_since()
+    default_since: int = _default_since_days()
     args = _parse_args(default_since)
-    NewsDigest().to_markdown_file(args.since, args.until, args.output_file)
+    load_config(args.digest)  # Pre-load the relevant config
+    now: datetime = datetime.now()
+    NewsDigest().to_markdown_file(
+        now - args.since,
+        now - args.until,
+        args.output_file
+    )
     write_datetime_to_file(LAST_DIGEST_END, args.until)
 
 
-def _get_default_since() -> datetime:
+def _default_since_days() -> int:
     last_digest_end: Optional[datetime] = load_datetime_from_file(
         LAST_DIGEST_END
     )
-    default_since: datetime = (
+    return (
         last_digest_end
-        if last_digest_end
-        else datetime.now().astimezone(timezone.utc) - timedelta(days=17)
+        if (datetime.now() - last).days + 1
+        else 9
     )
-    return default_since
 
 
 def _parse_datetime_in_utc(date_string: str) -> datetime:
@@ -38,26 +42,35 @@ def _parse_datetime_in_utc(date_string: str) -> datetime:
     return dt.astimezone(timezone.utc)
 
 
-def _parse_args(default_since: datetime) -> argparse.Namespace:
+def _parse_args(default_since: int) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--since",
-        type=_parse_datetime_in_utc,
-        default=default_since.isoformat(),
+        "--digest",
+        type=str,
         help=(
-            "Optional parameter in ISO-8601 format and local time zone."
-            "Will only analyze articles newer than this date-time."
-            "Defaults to 2 days ago, give users some time to upvote content."
+            "Mandatory parameter. Defines which config to load and "
+            "the name of an output directory."
+        ),
+        required=True
+    )
+    parser.add_argument(
+        "--since-days",
+        type=timedelta,
+        default=timedelta(days=default_since),
+        help=(
+            "Optional parameter. Will only analyze articles newer "
+            "than --since-days ago."
+            "Defaults to 9 days ago."
         ),
     )
     parser.add_argument(
-        "--until",
-        type=_parse_datetime_in_utc,
-        default=(default_since + timedelta(days=13)).isoformat(),
+        "--until-days",
+        type=timedelta,
+        default=timedelta(days=default_since + 7),
         help=(
-            "Optional parameter in ISO-8601 format and local time zone."
-            "Will only analyze articles older than this date-time."
-            "Defaults to since + 1 day"
+            "Optional parameter. Will only analyze articles that are older "
+            "than --until-days ago."
+            "Defaults to --since-days + 7 days."
         ),
     )
     parser.add_argument(

@@ -42,24 +42,25 @@ class SourcesConfig(BaseModel):
     articles_per_source_limit: int
 
 
-class OutputConfig(BaseModel):
-    digest: Path
+class DigestConfig(BaseModel):
+    out_path: Path
+    name: str
 
 
 class Config(BaseModel):
     llm: LLMConfig
     web: WebConfig
     sources: SourcesConfig
-    output: OutputConfig
+    digest: DigestConfig
 
 
 _config: Optional[Config] = None
 
 
-def load_config() -> Config:
+def load_config(digest_name: str) -> Config:
     global _config
     if _config is None:
-        _config = Config(**load_as_yml("config.yml"))
+        _config = Config(**load_as_yml(f"{digest_name}/config.yml"))
     return _config
 
 

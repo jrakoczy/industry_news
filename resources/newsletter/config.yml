@@ -26,5 +26,6 @@ sources:
       subspaces: [ ] # all
   articles_per_source_limit: 20
 output:
-  digest: "/home/kuba/business/digest/ai"
+  digest: "/home/kuba/business/digest"
+  digest_name: "newsletter"
 

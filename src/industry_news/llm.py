@@ -57,7 +57,9 @@ class TextSummarizer:
 
     def __init__(
         self,
-        summary_prompt_file_name: str = f"{_PROMPT_DIR}/summarize_prompt.txt",
+        summary_prompt_file_name: str = (
+            f"{load_config().digest.name}/{_PROMPT_DIR}/summarize_prompt.txt"
+        ),
         config: SummaryModelConfig = load_config().llm.summary_model,
         vertex_ai_factory: Callable[[str], VertexAI] = _vertex_ai,
     ) -> None:
@@ -68,7 +70,7 @@ class TextSummarizer:
         ) | vertex_ai_factory(config.name)
 
     def summarize(
-        self, text_generator: Generator[str, None, None]
+            self, text_generator: Generator[str, None, None]
     ) -> List[str]:
         """
         Args:
@@ -107,13 +109,13 @@ class TextSummarizer:
             1.0 / self._config.prompt_to_completion_len_ratio
         )
         prompt_cost_usd: Decimal = (
-            Decimal(len(text) + self._prompt_char_len())
-            / Decimal(1000)  # Cost is per 1k chars
-            * self._config.cost_per_1k_characters_usd
+                Decimal(len(text) + self._prompt_char_len())
+                / Decimal(1000)  # Cost is per 1k chars
+                * self._config.cost_per_1k_characters_usd
         )
 
         return (
-            prompt_cost_usd + prompt_cost_usd * completion_to_prompt_len_ratio
+                prompt_cost_usd + prompt_cost_usd * completion_to_prompt_len_ratio
         )
 
     @lru_cache
@@ -138,7 +140,7 @@ class ArticleFiltering:
         Source.RESEARCH_HUB: {_SOURCE_PROMPT_KEY: "Research Hub posts"},
         Source.FUTURE_TOOLS: {
             _SOURCE_PROMPT_KEY: "articles from Future Tools, "
-            + "a site aggregating AI news"
+                                + "a site aggregating AI news"
         },
     }
 
@@ -152,10 +154,10 @@ class ArticleFiltering:
     )
 
     def __init__(
-        self,
-        config: FilterModelConfig = load_config().llm.filter_model,
-        filter_prompt_file_name: str = f"{_PROMPT_DIR}/filter_prompt.txt",
-        openai_factory: Callable[[str], ChatOpenAI] = _OPENAI_FACTORY,
+            self,
+            config: FilterModelConfig = load_config().llm.filter_model,
+            filter_prompt_file_name: str = f"{_PROMPT_DIR}/filter_prompt.txt",
+            openai_factory: Callable[[str], ChatOpenAI] = _OPENAI_FACTORY,
     ) -> None:
         openai_model: ChatOpenAI = openai_factory(config.name)
 
@@ -176,7 +178,7 @@ class ArticleFiltering:
         )
 
     def filter_summaries(
-        self, articles_summaries: List[ArticleSummary]
+            self, articles_summaries: List[ArticleSummary]
     ) -> List[ArticleSummary]:
         """
         Filters the list of articles based on criteria defined in a prompt.
@@ -202,7 +204,7 @@ class ArticleFiltering:
         )
 
     def filter_metadata(
-        self, articles_metadata: List[ArticleMetadata]
+            self, articles_metadata: List[ArticleMetadata]
     ) -> List[ArticleMetadata]:
         """
         Filters the list of articles based on criteria defined in a prompt.
@@ -237,7 +239,7 @@ class ArticleFiltering:
         )
 
     def _sort_summaries_by_score(
-        self, articles_summaries: List[ArticleSummary]
+            self, articles_summaries: List[ArticleSummary]
     ) -> List[ArticleSummary]:
         return sorted(
             articles_summaries,
@@ -246,7 +248,7 @@ class ArticleFiltering:
         )
 
     def _sort_metadata_by_score(
-        self, articles_metadata: List[ArticleMetadata]
+            self, articles_metadata: List[ArticleMetadata]
     ) -> List[ArticleMetadata]:
         return sorted(
             articles_metadata,
@@ -255,7 +257,7 @@ class ArticleFiltering:
         )
 
     def _titles_to_chunks(
-        self, article_metadata: List[ArticleMetadata], source: Source
+            self, article_metadata: List[ArticleMetadata], source: Source
     ) -> List[str]:
         chunks: List[str] = _to_chunks(
             text=ArticleFiltering._to_text(article_metadata),
@@ -273,11 +275,11 @@ class ArticleFiltering:
 
     @staticmethod
     def _with_openai_cost_logged(
-        func: Callable[..., Any]
+            func: Callable[..., Any]
     ) -> Callable[..., Any]:
         @wraps(func)
         def wrapper(
-            self: Any, *args: List[Any], **kwargs: Dict[Any, Any]
+                self: Any, *args: List[Any], **kwargs: Dict[Any, Any]
         ) -> Any:
             with manager.get_openai_callback() as openai_callback:
                 result = func(self, *args, **kwargs)
@@ -287,9 +289,9 @@ class ArticleFiltering:
         return wrapper
 
     def _filter_by_titles(
-        self,
-        source: Source,
-        articles_metadta: List[ArticleMetadata],
+            self,
+            source: Source,
+            articles_metadta: List[ArticleMetadata],
     ) -> Dict[str, str]:
         article_titles_chunks: List[str] = self._titles_to_chunks(
             articles_metadta, source
@@ -302,7 +304,7 @@ class ArticleFiltering:
 
     @_with_openai_cost_logged
     def _filter_titles_by_prompt(
-        self, source: Source, numbered_chunks: List[str]
+            self, source: Source, numbered_chunks: List[str]
     ) -> Dict[str, str]:
         """
         Returns:
@@ -321,9 +323,9 @@ class ArticleFiltering:
         return remaining_titles_dict
 
     def _invoke_model(
-        self,
-        source: Source,
-        articles_chunk: str,
+            self,
+            source: Source,
+            articles_chunk: str,
     ) -> FilterArticlesResponse:
         prompt_variables: Dict[str, str] = ArticleFiltering._prompt_variables(
             source, articles_chunk
@@ -333,7 +335,7 @@ class ArticleFiltering:
 
     @staticmethod
     def _filter_titles_chunk(
-        articles_titles_chunk: str, model_response: FilterArticlesResponse
+            articles_titles_chunk: str, model_response: FilterArticlesResponse
     ) -> Dict[str, str]:
         return {
             ArticleMetadata.title_from_description(
@@ -353,8 +355,8 @@ class ArticleFiltering:
             )
         )
         max_chunk_token_count: int = (
-            self._cost_calculator.max_prompt_token_count()
-            - template_token_count
+                self._cost_calculator.max_prompt_token_count()
+                - template_token_count
         )
 
         if max_chunk_token_count <= 0:
@@ -374,7 +376,7 @@ class ArticleFiltering:
 
     @classmethod
     def _prompt_variables(
-        cls, source: Source, article_titles_chunks: str
+            cls, source: Source, article_titles_chunks: str
     ) -> Dict[str, str]:
         return {
             **{
@@ -393,7 +395,7 @@ class ArticleFiltering:
     @staticmethod
     def _number_lines(text: str) -> str:
         return os.linesep.join(
-            [f"{i+1}. {line}" for i, line in enumerate(text.split(os.linesep))]
+            [f"{i + 1}. {line}" for i, line in enumerate(text.split(os.linesep))]
         )
 
     @lru_cache
@@ -405,8 +407,8 @@ class ArticleFiltering:
 
     @staticmethod
     def _filter_metadata_adding_reasons(
-        sorted_articles_metadata: List[ArticleMetadata],
-        remaining_titles_dict: Dict[str, str],
+            sorted_articles_metadata: List[ArticleMetadata],
+            remaining_titles_dict: Dict[str, str],
     ) -> List[ArticleMetadata]:
         remaining_metadata: List[ArticleMetadata] = []
 
@@ -422,8 +424,8 @@ class ArticleFiltering:
 
     @staticmethod
     def _filter_summaries_adding_reasons(
-        sorted_articles_summaries: List[ArticleSummary],
-        remaining_titles_dict: Dict[str, str],
+            sorted_articles_summaries: List[ArticleSummary],
+            remaining_titles_dict: Dict[str, str],
     ) -> List[ArticleSummary]:
         remaining_summaries: List[ArticleSummary] = []
 
@@ -445,10 +447,10 @@ class ArticleFiltering:
 
 class OpenAICostCalculator:
     def __init__(
-        self,
-        openai: ChatOpenAI,
-        prompt_to_completion_len_ratio: float,
-        context_size_limit: Optional[int] = None,
+            self,
+            openai: ChatOpenAI,
+            prompt_to_completion_len_ratio: float,
+            context_size_limit: Optional[int] = None,
     ) -> None:
         self._openai = openai
         self._prompt_to_completion_len_ratio = prompt_to_completion_len_ratio
@@ -473,7 +475,7 @@ class OpenAICostCalculator:
 
     def max_completion_cost_usd(self) -> Decimal:
         max_completion_len: int = (
-            self.context_size - self.max_prompt_token_count()
+                self.context_size - self.max_prompt_token_count()
         )
         return Decimal(
             max_completion_len
@@ -488,7 +490,7 @@ class OpenAICostCalculator:
         return self.max_completion_cost_usd() + self.max_prompt_cost_usd()
 
     def prompt_template_token_count(
-        self, prompt_file_name: str, variables: Dict[str, str]
+            self, prompt_file_name: str, variables: Dict[str, str]
     ) -> int:
         prompt_template: PromptTemplate = _prompt_template(prompt_file_name)
         return self._openai.get_num_tokens(prompt_template.format(**variables))

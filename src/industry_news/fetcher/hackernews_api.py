@@ -41,7 +41,7 @@ class HackerNewsApi(MetadataFetcher):
     def __init__(
         self,
         api_base_url: str = _API_BASE_URL,
-        data_backup_path: Path = load_config().output.digest
+        data_backup_path: Path = load_config().digest.out_path
         / "data"
         / "hackernews",
     ) -> None:
