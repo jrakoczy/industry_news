@@ -36,7 +36,7 @@ from industry_news.utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_PROMPT_DIR = "prompts"
+_PROMPT_PATH = "prompts"
 _NUM_OF_DIFFERENT_MODELS = 2
 T = TypeVar("T")
 
@@ -58,7 +58,7 @@ class TextSummarizer:
     def __init__(
         self,
         summary_prompt_file_name: str = (
-            f"{load_config().digest.name}/{_PROMPT_DIR}/summarize_prompt.txt"
+            f"{load_config().digest.name}/{_PROMPT_PATH}/summarize_prompt.txt"
         ),
         config: SummaryModelConfig = load_config().llm.summary_model,
         vertex_ai_factory: Callable[[str], VertexAI] = _vertex_ai,
@@ -156,12 +156,13 @@ class ArticleFiltering:
     def __init__(
             self,
             config: FilterModelConfig = load_config().llm.filter_model,
-            filter_prompt_file_name: str = f"{_PROMPT_DIR}/filter_prompt.txt",
+            prompt_dir: Path = Path(load_config().digest.name) / _PROMPT_PATH,
+            filter_prompt_file_name: str = "filter_prompt.txt",
             openai_factory: Callable[[str], ChatOpenAI] = _OPENAI_FACTORY,
     ) -> None:
         openai_model: ChatOpenAI = openai_factory(config.name)
-
-        self._filter_prompt_file_name = filter_prompt_file_name
+        self._prompt_dir = prompt_dir
+        self._filter_prompt_file_path = self._prompt_dir / filter_prompt_file_name
         self._model_name = openai_model.model_name
         self._model = _prompt_template(
             filter_prompt_file_name
@@ -351,7 +352,7 @@ class ArticleFiltering:
         )
         template_token_count: int = (
             self._cost_calculator.prompt_template_token_count(
-                self._filter_prompt_file_name, prompt_variables
+                self._filter_prompt_file_path, prompt_variables
             )
         )
         max_chunk_token_count: int = (
@@ -399,10 +400,9 @@ class ArticleFiltering:
         )
 
     @lru_cache
-    @staticmethod
-    def _load_n_shot_text(source: Source) -> str:
+    def _load_n_shot_text(self, source: Source) -> str:
         return load_as_string(
-            f"{_PROMPT_DIR}/n_shot/{source.value}_n_shot.txt"
+            f"{self._prompt_dir}/n_shot/{source.value}_n_shot.txt"
         )
 
     @staticmethod
