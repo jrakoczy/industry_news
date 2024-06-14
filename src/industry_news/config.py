@@ -1,3 +1,4 @@
+import os
 from decimal import Decimal
 from pathlib import Path
 from typing import List, Optional
@@ -57,9 +58,12 @@ class Config(BaseModel):
 _config: Optional[Config] = None
 
 
-def load_config(digest_name: str) -> Config:
+def load_config() -> Config:
     global _config
     if _config is None:
+        # This is a hacky solution, replace it with proper
+        # config injection.
+        digest_name: str = os.environ["DIGEST_NAME"]
         _config = Config(**load_as_yml(f"{digest_name}/config.yml"))
     return _config
 

@@ -4,6 +4,7 @@ from functools import lru_cache, wraps
 import logging
 import math
 import os
+from pathlib import Path
 from typing import (
     Any,
     Callable,
@@ -165,7 +166,7 @@ class ArticleFiltering:
         self._filter_prompt_file_path = self._prompt_dir / filter_prompt_file_name
         self._model_name = openai_model.model_name
         self._model = _prompt_template(
-            filter_prompt_file_name
+            f"{self._prompt_dir}/{filter_prompt_file_name}"
         ) | openai_model.with_structured_output(
             FilterArticlesResponse, method="json_mode"
         )

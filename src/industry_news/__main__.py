@@ -16,11 +16,10 @@ LAST_DIGEST_END = Path("last_digest_end.txt")
 def main() -> None:
     default_since: int = _default_since_days()
     args = _parse_args(default_since)
-    load_config(args.digest)  # Pre-load the relevant config
-    now: datetime = datetime.now()
+    now: datetime = datetime.now().astimezone(timezone.utc)
     NewsDigest().to_markdown_file(
-        now - args.since,
-        now - args.until,
+        now - args.since_days,
+        now - args.until_days,
         args.output_file
     )
     write_datetime_to_file(LAST_DIGEST_END, args.until)
@@ -31,31 +30,17 @@ def _default_since_days() -> int:
         LAST_DIGEST_END
     )
     return (
-        last_digest_end
-        if (datetime.now() - last).days + 1
+        (datetime.now() - last_digest_end).days + 1
+        if last_digest_end
         else 9
     )
-
-
-def _parse_datetime_in_utc(date_string: str) -> datetime:
-    dt = datetime.fromisoformat(date_string)
-    return dt.astimezone(timezone.utc)
 
 
 def _parse_args(default_since: int) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--digest",
-        type=str,
-        help=(
-            "Mandatory parameter. Defines which config to load and "
-            "the name of an output directory."
-        ),
-        required=True
-    )
-    parser.add_argument(
         "--since-days",
-        type=timedelta,
+        type=lambda days: timedelta(days=days),
         default=timedelta(days=default_since),
         help=(
             "Optional parameter. Will only analyze articles newer "
@@ -65,7 +50,7 @@ def _parse_args(default_since: int) -> argparse.Namespace:
     )
     parser.add_argument(
         "--until-days",
-        type=timedelta,
+        type=lambda days: timedelta(days=days),
         default=timedelta(days=default_since + 7),
         help=(
             "Optional parameter. Will only analyze articles that are older "
