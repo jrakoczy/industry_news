@@ -17,12 +17,13 @@ def main() -> None:
     default_since: int = _default_since_days()
     args = _parse_args(default_since)
     now: datetime = datetime.now().astimezone(timezone.utc)
+    until: datetime = now - args.until_days
     NewsDigest().to_markdown_file(
-        now - args.since_days,
-        now - args.until_days,
-        args.output_file
+        since=now - args.since_days,
+        until=until,
+        output_file=args.output_file
     )
-    write_datetime_to_file(LAST_DIGEST_END, args.until)
+    write_datetime_to_file(LAST_DIGEST_END, until)
 
 
 def _default_since_days() -> int:
@@ -30,7 +31,7 @@ def _default_since_days() -> int:
         LAST_DIGEST_END
     )
     return (
-        (datetime.now() - last_digest_end).days + 1
+        (datetime.now().astimezone(timezone.utc) - last_digest_end).days + 1
         if last_digest_end
         else 9
     )
@@ -39,19 +40,21 @@ def _default_since_days() -> int:
 def _parse_args(default_since: int) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "-s",
         "--since-days",
-        type=lambda days: timedelta(days=days),
+        type=lambda days: timedelta(days=int(days)),
         default=timedelta(days=default_since),
         help=(
             "Optional parameter. Will only analyze articles newer "
             "than --since-days ago."
-            "Defaults to 9 days ago."
+            "Defaults to a value stored in last_digest_date.txt or 9 days ago."
         ),
     )
     parser.add_argument(
+        "-u",
         "--until-days",
-        type=lambda days: timedelta(days=days),
-        default=timedelta(days=default_since + 7),
+        type=lambda days: timedelta(days=int(days)),
+        default=timedelta(days=default_since - 7),
         help=(
             "Optional parameter. Will only analyze articles that are older "
             "than --until-days ago."
@@ -59,6 +62,7 @@ def _parse_args(default_since: int) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "-o",
         "--output-file",
         type=Path,
         help=(

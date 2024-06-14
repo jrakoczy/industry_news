@@ -28,6 +28,6 @@ sources:
     #   subspaces: [] # all
   articles_per_source_limit: 20
 digest:
-  out_path: "/home/kuba/business/digest/ai"
+  out_path: "/home/kuba/business/digest"
   name: "ai"
 
